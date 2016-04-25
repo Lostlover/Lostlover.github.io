@@ -1,0 +1,37 @@
+{
+  "name": "LostloverBlog",
+  "version": "1.0.0",
+  "description": "Blog",
+  "main": "gulp.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lostlover/Lostlover.github.io.git"
+  },
+  "keywords": [
+    "Lostlover"
+  ],
+  "author": "Lostlover",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Lostlover/Lostlover.github.io/issues"
+  },
+  "homepage": "https://github.com/Lostlover/Lostlover.github.io#readme",
+  "devDependencies": {
+    "gulp": "~3.9.0",
+    "gulp-clean": "~0.3.1",
+    "gulp-concat": "~2.6.0",
+    "gulp-connect": "~2.2.0",
+    "gulp-data": "~1.2.0",
+    "gulp-minify-css": "~1.2.1",
+    "gulp-notify": "2.2.0",
+    "gulp-rename": "~1.2.2",
+    "gulp-rev-append": "^0.1.6",
+    "gulp-sequence": "~0.3.1",
+    "gulp-swig": "~0.7.4",
+    "gulp-uglify": "~1.4.2",
+    "gulp-util": "~3.0.7",
+    "merge-stream": "^1.0.0",
+    "path": "~0.11.14",
+    "vinyl-source-stream": "~1.1.0"
+  }
+}
