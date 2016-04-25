@@ -1,4 +1,4 @@
 .idea/
 src/
 config/
-gulp.js
+node_modules/
