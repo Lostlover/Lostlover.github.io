@@ -1,11 +1,23 @@
-.t-center{
+body{
+    font-family: "ElizabethSerif", Georgia, serif !important;
+}
+.t-center {
     text-align: center;
 }
-.featured-items{
-    display: -webkit-flex;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-justify-content: space-between;
-    -ms-flex-pack: justify;
-    justify-content: space-between;
+
+.c-bottom-line {
+    border-bottom: 1px solid #eaeaea;
+}
+
+.head-line {
+    word-break: break-word;
+    word-wrap: break-word;
+}
+
+.border-left{
+    border-left: 1px solid #e5e5e5
+}
+
+.border-bottom {
+    border-bottom: 1px solid #e5e5e5
 }
