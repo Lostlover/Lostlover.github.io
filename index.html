@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html ng-app="app">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+    <title>Lostlover的个人博客</title>
+    <meta name="keywords" content="Lostlover的个人博客">
+    <meta name="description" content="高洋的个人博客,前端攻城狮,热爱编程,喜欢敲代码,期待有一天自己能创新出一些小玩意让大家所熟知">
+    <meta name="author" content="Lostlover">
+    <!-- Faviconc-->
+    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png">
+    <!-- Bootstrap-->
+    <!--link(rel='stylesheet', type='text/css', href='vendors/bootstrap/css/bootstrap.min.css#{hash}')-->
+    <!--link(rel='stylesheet', type='text/css', href='vendors/bootstrap/css/bootstrap-theme.min.css#{hash}')-->
+    <!--Swiper-->
+    <!--link(rel='stylesheet', type='text/css', href='vendors/swiper/css/swiper.min.css#{hash}')-->
+    <!-- Magnific-popup-->
+    <link rel="stylesheet" type="text/css" href="css/style.min.css?rev=4fccb55581d6b8c9d9e469ba9da811d8">
+    <script src="js/app.bundle.js?rev=1b3372454e6ced68fb9f42b44abc3f80"></script>
+  </head>
+  <body>
+    <header id="header">
+      <div data-bg-image="images/bg-header.jpg" class="logo">
+        <h1><a href="index.html">Lostlover's Blog</a></h1>
+        <p>IT民工,苦逼的每天都在搬砖,还被老板拖欠工资</p>
+      </div>
+      <div class="menu-container">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-7">
+              <nav class="main-nav">
+                <ul>
+                  <li class="current-menu-item menu-item-has-children"><a href="index.html">主页</a></li>
+                  <li><a href="grid.html">日常笔记</a></li>
+                  <li><a href="fullwidth.html">技术分享</a></li>
+                  <li><a href="single.html">面向对象编程</a></li>
+                  <li><a href="about.html">Ecmascript</a></li>
+                  <li><a href="contacts.html">联系我</a></li>
+                </ul><a id="close-menu" href="javascript:;"><i class="fa fa-close"></i></a>
+              </nav>
+            </div>
+            <div class="col-md-5 h-search">
+              <form class="search_form">
+                <input type="text" name="2" placeholder="Search and hit enter...">
+                <button type="submit"><i class="fa fa-search"></i></button>
+              </form>
+              <div class="head-social"><a href="#" class="socials"><i class="fa fa-facebook"></i></a><a href="#" class="socials"><i class="fa fa-twitter"></i></a><a href="#" class="socials"><i class="fa fa-pinterest"></i></a><a href="#" class="socials"><i class="fa fa-instagram"></i></a><a href="#" class="socials"><i class="fa fa-rss"></i></a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <section class="section-content">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-8 col-md-8">
+            <article class="content-item">
+              <div class="entry-media">
+                <div class="post-ribbon">
+                  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewbox="0 0 34 50" enable-background="new 0 0 34 50" xml:space="preserve">
+                    <g>
+                      <polygon fill-rule="evenodd" clip-rule="evenodd" points="17,40.7 0.5,49.2 0.5,0.5 33.5,0.5 33.5,49.2">
+                        <path d="M33,1v47.4l-15.5-8L17,40.2l-0.5,0.2L1,48.4V1H33 M34,0H0v50l17-8.7L34,50V0L34,0z"></path>
+                      </polygon>
+                    </g>
+                  </svg><i class="fa fa-star"></i>
+                </div>
+                <div class="post-title">
+                  <h2><a href="#">Weekly photoshoots</a></h2>
+                  <div class="entry-date">
+                    <ul>
+                      <li><a href="#">food recipe</a></li>
+                      <li>may 15,2001</li>
+                      <li>23 comment</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-content">
+                  <div class="container gallery">
+                    <div class="row">
+                      <div class="col-xs-6 photos"><a class="photos"><img src="images/footer/photos1.jpg" alt="not image"></a></div>
+                      <div class="col-xs-6 photos"><a class="photos"><img src="images/footer/photos2.jpg" alt="image"></a></div>
+                      <div class="col-xs-3 photos"><a class="photos"><img src="images/content/photos3.jpg" alt="image"></a></div>
+                      <div class="col-xs-3 photos"><a class="photos"><img src="images/content/photos4.jpg" alt="image"></a></div>
+                      <div class="col-xs-3 photos"><a class="photos"><img src="images/content/photos5.jpg" alt="image"></a></div>
+                      <div class="col-xs-3 photos"><a class="photos"><img src="images/content/photos3.jpg" alt="image"></a></div>
+                    </div>
+                  </div>
+                  <p>
+                    It is a long established fact that a reader will be distracted by the readable content
+                    of a
+                    page
+                    when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less
+                    normal
+                    distribution of letters, as opposed to using 'Content here, content here', making it
+                    look
+                    like
+                    readable English. Many desktop publishing packages and web page editors now use Lorem
+                    Ipsum
+                    as their default model text, and a search for [...]
+                  </p>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-footer">
+                  <div class="row">
+                    <div class="col-sm-5"><a href="javascript:;" class="button">Continue reading</a></div>
+                    <div class="col-sm-7 text-right">
+                      <div class="content-social"><a href="javascript:;"><i class="fa fa-facebook"></i><span>Facebook</span></a><a href="javascript:;"><i class="fa fa-twitter"></i><span>Twitter</span></a><a href="javascript:;"><i class="fa fa-pinterest"></i><span>Pinterest</span></a></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="content-item">
+              <div class="entry-media">
+                <div class="post-title">
+                  <h2><a href="#"> Made some delicious dishes. And want to share you</a></h2>
+                  <div class="entry-date">
+                    <ul>
+                      <li><a href="#">food recipe</a></li>
+                      <li>may 15,2001</li>
+                      <li>23 comment</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-content"><img src="images/content/post.jpg" alt=" image">
+                  <p>
+                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                    has
+                    been
+                    the industry's standard dummy text ever since the 1500s, when an unknown printer took a
+                    galley
+                    of type and scrambled it to make a type specimen book. It has survived not only five
+                    centuries,
+                    but also the leap into electronic typesetting, remaining essentially unchanged. It was
+                    popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum
+                    passages,
+                    and more recently with desktop publishing software like Aldus PageMaker including
+                    versions
+                    of
+                    Lorem Ipsum.
+                  </p>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-footer">
+                  <div class="row">
+                    <div class="col-sm-5"><a href="javascript:;" class="button">Continue reading</a></div>
+                    <div class="col-sm-7 text-right">
+                      <div class="content-social"><a href="javascript:;"><i class="fa fa-facebook"></i><span>Facebook</span></a><a href="javascript:;"><i class="fa fa-twitter"></i><span>Twitter</span></a><a href="javascript:;"><i class="fa fa-pinterest"></i><span>Pinterest</span></a></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="content-item">
+              <div class="entry-media">
+                <div class="post-content">
+                  <div class="post-icon">
+                    <p></p>
+                  </div>
+                  <h3>Nothing is impossible, the word itself says I'm possible!</h3>
+                  <hr class="post-horizontal-rule"><br>
+                  <p class="sub-title">Audrey Hepburn</p>
+                </div>
+              </div>
+            </article>
+            <article class="content-item">
+              <div class="entry-media">
+                <div class="post-title">
+                  <h2><a href="#"> Weekly photoshoots</a></h2>
+                  <div class="entry-date">
+                    <ul>
+                      <li><a href="#">food recipe</a></li>
+                      <li>may 15,2001</li>
+                      <li>23 comment</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-content">
+                  <div class="content_slide">
+                    <div class="swiper-container">
+                      <div class="swiper-wrapper s-slide-wrapper">
+                        <div class="swiper-slide"><img src="images/content/photo1.jpg" alt="image"></div>
+                        <div class="swiper-slide"><img src="images/content/photo2.jpg" alt="image"></div>
+                        <div class="swiper-slide"><img src="images/content/photo3.jpg" alt="image"></div>
+                        <div class="swiper-slide"><img src="images/content/photo4.jpg" alt="image"></div>
+                      </div>
+                      <div class="swiper-button-prev circle-arrow"><i class="fa fa-chevron-left"></i></div>
+                      <div class="swiper-button-next circle-arrow"><i class="fa fa-chevron-right"></i></div>
+                    </div>
+                  </div>
+                  <p>
+                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                    has
+                    been the industry's standard dummy text ever since the 1500s, when an unknown printer
+                    took a
+                    galley of type and scrambled it to make a type specimen book. It has survived not only
+                    five
+                    centuries, but also the leap into electronic typesetting, remained.
+                  </p>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-footer">
+                  <div class="row">
+                    <div class="col-sm-5"><a href="javascript:;" class="button">Continue reading</a></div>
+                    <div class="col-sm-7 text-right">
+                      <div class="content-social"><a href="javascript:;"><i class="fa fa-facebook"></i><span>Facebook</span></a><a href="javascript:;"><i class="fa fa-twitter"></i><span>Twitter</span></a><a href="javascript:;"><i class="fa fa-pinterest"></i><span>Pinterest</span></a></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="content-item">
+              <div class="entry-media">
+                <div class="post-title">
+                  <h2><a href="#">Random shots of SoundCloud</a></h2>
+                  <div class="entry-date">
+                    <ul>
+                      <li><a href="#">food recipe</a></li>
+                      <li>may 15,2001</li>
+                      <li>23 comment</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-content">
+                  <!--iframe(width='100%', height='350', scrolling='no', frameborder='no', src='https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/users/76708273&auto_play=false&visual=true')-->
+                  <p>
+                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                    has
+                    been
+                    the industry's standard dummy text ever since the 1500s, when an unknown printer took a
+                    galley
+                    of type and scrambled it to make a type specimen book. It has survived not only five
+                    centuries,
+                    but also the leap into electronic typesetting, remaining essentially unchanged. It was
+                    popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum
+                    passages,
+                    and more recently with desktop publishing software like Aldus PageMaker including
+                    versions
+                    of
+                    Lorem Ipsum.
+                  </p>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-footer">
+                  <div class="row">
+                    <div class="col-sm-5"><a href="javascript:;" class="button">Continue reading</a></div>
+                    <div class="col-sm-7 text-right">
+                      <div class="content-social"><a href="javascript:;"><i class="fa fa-facebook"></i><span>Facebook</span></a><a href="javascript:;"><i class="fa fa-twitter"></i><span>Twitter</span></a><a href="javascript:;"><i class="fa fa-pinterest"></i><span>Pinterest</span></a></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="content-item">
+              <div class="entry-media">
+                <div class="post-title">
+                  <h2><a href="#">
+                      Check this link and get info about
+                      author Themeton</a></h2>
+                  <div class="entry-date">
+                    <ul>
+                      <li><a href="#">food recipe</a></li>
+                      <li>may 15,2001</li>
+                      <li>23 comment</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-content">
+                  <div class="post-in"><a href="#"> http://themeforest.net/user/themeton</a></div>
+                  <p>
+                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                    has been the
+                    industry's standard dummy text ever since the 1500s, when an unknown printer took a
+                    galley of type
+                    and scrambled it to make a type specimen book. It has survived not only five centuries,
+                    but also the
+                    leap into electronic.
+                  </p>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-footer">
+                  <div class="row">
+                    <div class="col-sm-5"><a href="javascript:;" class="button">Continue reading</a></div>
+                    <div class="col-sm-7 text-right">
+                      <div class="content-social"><a href="javascript:;"><i class="fa fa-facebook"></i><span>Facebook</span></a><a href="javascript:;"><i class="fa fa-twitter"></i><span>Twitter</span></a><a href="javascript:;"><i class="fa fa-pinterest"></i><span>Pinterest</span></a></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="content-item">
+              <div class="entry-media">
+                <div class="post-title">
+                  <h2><a href="#"> Vimeo staff picked videos</a></h2>
+                  <div class="entry-date">
+                    <ul>
+                      <li><a href="#">food recipe</a></li>
+                      <li>may 15,2001</li>
+                      <li>23 comment</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-content">
+                  <!--iframe(src='https://player.vimeo.com/video/158089470?color=ffffff&title=0&byline=0&portrait=0&badge=0', width='100%', height='300', frameborder='0', webkitallowfullscreen='', mozallowfullscreen='', allowfullscreen='')-->
+                  <p>
+                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                    has
+                    been
+                    the industry's standard dummy text ever since the 1500s, when an unknown printer took a
+                    galley
+                    of type and scrambled it to make a type specimen book. It has survived not only five
+                    centuries.
+                  </p>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-footer">
+                  <div class="row">
+                    <div class="col-sm-5"><a href="javascript:;" class="button">Continue reading</a></div>
+                    <div class="col-sm-7 text-right">
+                      <div class="content-social"><a href="javascript:;"><i class="fa fa-facebook"></i><span>Facebook</span></a><a href="javascript:;"><i class="fa fa-twitter"></i><span>Twitter</span></a><a href="javascript:;"><i class="fa fa-pinterest"></i><span>Pinterest</span></a></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="content-item">
+              <div class="entry-media">
+                <div class="post-title">
+                  <h2><a href="#">This is my new work walls</a></h2>
+                  <div class="entry-date">
+                    <ul>
+                      <li><a href="#">food recipe</a></li>
+                      <li>may 15,2001</li>
+                      <li>23 comment</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-content"><img src="images/content/01-Standart.jpg" alt="not image">
+                  <p>
+                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                    has
+                    been
+                    the industry's standard dummy text ever since the 1500s, when an unknown printer took a
+                    galley
+                    of type and scrambled it to make a type specimen book. It has survived not only five
+                    centuries,
+                    but also the leap into electronic typesetting, remaining essentially unchanged. It was
+                    popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum
+                    passages,
+                    and more recently with desktop publishing software like Aldus PageMaker including
+                    versions
+                    of
+                    Lorem Ipsum.
+                  </p>
+                </div>
+                <div class="bubble-line"></div>
+                <div class="post-footer">
+                  <div class="row">
+                    <div class="col-sm-5"><a href="javascript:;" class="button">Continue reading</a></div>
+                    <div class="col-sm-7 text-right">
+                      <div class="content-social"><a href="javascript:;"><i class="fa fa-facebook"></i><span>Facebook</span></a><a href="javascript:;"><i class="fa fa-twitter"></i><span>Twitter</span></a><a href="javascript:;"><i class="fa fa-pinterest"></i><span>Pinterest</span></a></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <div class="post-navigation">
+              <ul>
+                <li><span>1</span></li>
+                <li><a href="javascript:;">2</a></li>
+                <li><a href="javascript:;">3</a></li>
+                <li><a href="javascript:;"><i class="fa fa-chevron-right"></i></a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-sm-4 sidebar">
+            <div class="widget">
+              <h3 class="widget-title">Story about me</h3>
+              <div class="bubble-line"></div>
+              <div class="widget-content"><img src="images/widget/about.jpg" alt="not image">
+                <p>
+                  Hello I’m Jenny Kurto author of Letter town blog. This is my personal space which is like to
+                  share
+                  others. And i’m living New York city working and blogging.
+                </p>
+                <div class="widget-more"><a href="javascript:;" class="button">More story</a></div>
+              </div>
+            </div>
+            <div class="widget">
+              <h3 class="widget-title"> Category</h3>
+              <div class="bubble-line"></div>
+              <div class="widget-content">
+                <ul>
+                  <li><a href="javascript:;">Video & music</a></li>
+                  <li><a href="javascript:;">Fashion</a></li>
+                  <li><a href="javascript:;">Travel & hiking</a></li>
+                  <li><a href="javascript:;">Photography</a></li>
+                  <li><a href="javascript:;">food recipe</a></li>
+                  <li><a href="javascript:;">do it yourself</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="widget">
+              <h3 class="widget-title"> Resent posts</h3>
+              <div class="bubble-line"></div>
+              <div class="widget-content">
+                <div class="widget-recent"><img src="images/widget/resent.jpg" alt="not image">
+                  <h4><a href="javascript:;">Meet my workspace</a></h4>
+                  <p>
+                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                    has been the
+                    industry.
+                  </p>
+                </div>
+                <div class="widget-recent"><img src="images/widget/resent1.jpg" alt="not image">
+                  <h4><a href="javascript:;">This is how to unique idea born</a></h4>
+                  <p>
+                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                    has been the
+                    industry.
+                  </p>
+                </div>
+                <div class="widget-recent last"><img src="images/content/photos4.jpg" alt="not image">
+                  <h4><a href="javascript:;">Only you will choose your life.</a></h4>
+                  <p>
+                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum
+                    has been the
+                    industry.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="widget widget-sub">
+              <h5> Subscribe</h5>
+              <p>
+                Sign up to receive updates and latest new things from us everyday. And i will not spam promise.
+                :)
+              </p>
+              <div class="widget-sub-s">
+                <form class="sign_up_form">
+                  <input type="text" name="2" placeholder="Enter your email"><a href="javascript:;" class="button color-y">sign up</a>
+                </form>
+              </div>
+            </div>
+            <div class="widget">
+              <h3 class="widget-title"><a href="javascript:;"> Cloudy tags</a></h3>
+              <div class="bubble-line"></div>
+              <div class="widget-content">
+                <div class="widget-tags"><a href="javascript:;">clean</a><a href="javascript:;">minimal</a><a href="javascript:;">cloudy</a><a href="javascript:;">video</a><a href="javascript:;">template</a><a href="javascript:;">fashion</a><a href="javascript:;">bloggers</a><a href="javascript:;">carefully</a><a href="javascript:;">handcrafted</a><a href="javascript:;">print</a><a href="javascript:;">psd</a><a href="javascript:;">music</a><a href="javascript:;">food recipe</a></div>
+              </div>
+            </div>
+            <div class="widget-sub social">
+              <ul>
+                <li><a href="javascript:;" class="social-widget"><i class="fa fa-facebook"></i><span> share</span></a>
+                  <div> 211</div>
+                </li>
+                <li><a href="javascript:;" class="social-widget"><i class="fa fa-twitter"></i><span>follow</span></a>
+                  <div> 121</div>
+                </li>
+                <li><a href="javascript:;" class="social-widget"><i class="fa fa-google-plus"></i><span> share</span></a>
+                  <div> 11</div>
+                </li>
+                <li><a href="javascript:;" class="social-widget"><i class="fa fa-instagram"></i><span> follow</span></a>
+                  <div>65</div>
+                </li>
+              </ul>
+            </div>
+            <div class="widget">
+              <h3 class="widget-title"><a href="javascript:;"> Buy this Theme</a></h3>
+              <div class="bubble-line"></div>
+              <div class="widget-content sm">
+                <p>
+                  Vivamus interdum felis posuere justo
+                  condimentum, in consequat libero lacinia. Vestibulum eget viverra nulla. Curabitur
+                  feugiat vulputate consectetur.
+                </p>
+                <div class="widget-more"><a href="javascript:;" class="button">purchase</a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="instagram-follow"><a href="javascript:;">
+        <h2> FOLLOW ME ON INSTAGRAM</h2></a></section>
+    <footer id="footer">
+      <div class="footer-slide">
+        <div class="swiper-container">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide fslide col-xs-6 col-sm-4 col-md-3 col-lg-2"><a href="#" class="thumbnails"><img src="images/footer/photos2.jpg" alt="Image"></a></div>
+            <div class="swiper-slide fslide col-xs-6 col-sm-4 col-md-3 col-lg-2"><a href="#" class="thumbnails"><img src="images/footer/photos1.jpg" alt="Image"></a></div>
+            <div class="swiper-slide fslide col-xs-6 col-sm-4 col-md-3 col-lg-2"><a href="#" class="thumbnails"><img src="images/footer/01-footer.jpg" alt="Image"></a></div>
+            <div class="swiper-slide fslide col-xs-6 col-sm-4 col-md-3 col-lg-2"><a href="#" class="thumbnails"><img src="images/footer/02-footert.jpg" alt="Image"></a></div>
+            <div class="swiper-slide fslide col-xs-6 col-sm-4 col-md-3 col-lg-2"><a href="#" class="thumbnails"><img src="images/footer/photos4.jpg" alt="Image"></a></div>
+            <div class="swiper-slide fslide col-xs-6 col-sm-4 col-md-3 col-lg-2"><a href="#" class="thumbnails"><img src="images/footer/photos5.jpg" alt="Image"></a></div>
+            <div class="swiper-slide fslide col-xs-6 col-sm-4 col-md-3 col-lg-2"><a href="#" class="thumbnails"><img src="images/footer/photos7.jpg" alt="Image"></a></div>
+            <div class="swiper-slide fslide col-xs-6 col-sm-4 col-md-3 col-lg-2"><a href="#" class="thumbnails"><img src="images/footer/photos6.jpg" alt="Image"></a></div>
+          </div>
+          <div class="swiper-button-prev circle-arrow"><i class="fa fa-chevron-left"></i></div>
+          <div class="swiper-button-next circle-arrow"><i class="fa fa-chevron-right"></i></div>
+          <div class="swiper-center"><a href="javascript:;"><i class="fa fa-instagram"></i>Cloudy town</a></div>
+        </div>
+      </div>
+      <div class="sub-footer">
+        <div class="container">
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="widget"></div>
+              <div class="widget footer-cp-text">
+                <p>© 2016. All rights reserved. Cloudytown made with love by<a href="http://jqueryfuns.com" target="_blank">Themeton</a> Designs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <script id="tpl-bubble-left" type="text/template">
+      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 15 30" enable-background="new 0 0 15 30" xml:space="preserve">
+      <path fill-rule="evenodd" clip-rule="evenodd" fill="none" stroke="#000000" stroke-miterlimit="10" d="M0,29.4c0,0,7.5,0,7.5-7c0,0,7,0,7-7c0-0.1,0-0.1,0-0.2c0-0.1,0-0.1,0-0.2c0-7-7-7-7-7c0-7-7.5-7-7.5-7"/>
+      </svg>
+    </script>
+    <script id="tpl-bubble-right" type="text/template">
+      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 15 30" enable-background="new 0 0 15 30" xml:space="preserve">
+      <path fill-rule="evenodd" clip-rule="evenodd" fill="none" stroke="#000000" stroke-miterlimit="10" d="M15,29.4c0,0-7.5,0-7.5-7c0,0-7,0-7-7c0-0.1,0-0.1,0-0.2c0-0.1,0-0.1,0-0.2c0-7,7-7,7-7c0-7,7.5-7,7.5-7"/>
+      </svg>
+    </script>
+  </body>
+</html>
