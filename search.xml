@@ -1284,6 +1284,27 @@
     </entry>
     
     <entry>
+      <title><![CDATA[Github绑定自定义域名(附hexo配置)]]></title>
+      <url>https://lostlover.github.io/20160731/github-customdomain.html</url>
+      <content type="html"><![CDATA[<h2 id="如何绑定自定义域名"><a href="#如何绑定自定义域名" class="headerlink" title="如何绑定自定义域名"></a>如何绑定自定义域名</h2><h3 id="1-添加CNAME"><a href="#1-添加CNAME" class="headerlink" title="1.添加CNAME"></a>1.添加CNAME</h3><p>在你的<code>github_name.github.io</code>项目根目录下创建一个<code>CNAME</code>文件(无扩展名)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">//你要绑定的域名</span><br><span class="line">178dream.com</span><br></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<h3 id="2-解析域名"><a href="#2-解析域名" class="headerlink" title="2.解析域名"></a>2.解析域名</h3><p>去你购买域名的服务商空间里找到域名解析的选项,修改如下:<br><img src="/downloads/Achange.png" alt="A记录修改"><br>解析成功后即可用绑定的自定义访问.</p>
+<hr>
+<h2 id="hexo部署"><a href="#hexo部署" class="headerlink" title="hexo部署"></a>hexo部署</h2><p>如果使用hexo部署博客的话,CNAME文件写在以下路径:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/source/CNAME</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ hexo g // 在public根目录下生成CNAME文件</span><br><span class="line">$ hexo d // 自动部署到远程仓库根目录下</span><br></pre></td></tr></table></figure>]]></content>
+      
+        
+        <tags>
+            
+            <tag> github </tag>
+            
+            <tag> hexo </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
       <title><![CDATA[Hello World]]></title>
       <url>https://lostlover.github.io/20160731/hello-world.html</url>
       <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
@@ -1385,27 +1406,6 @@
         <tags>
             
             <tag> git </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[Github绑定自定义域名(附hexo配置)]]></title>
-      <url>https://lostlover.github.io/20160731/github-customdomain.html</url>
-      <content type="html"><![CDATA[<h2 id="如何绑定自定义域名"><a href="#如何绑定自定义域名" class="headerlink" title="如何绑定自定义域名"></a>如何绑定自定义域名</h2><h3 id="1-添加CNAME"><a href="#1-添加CNAME" class="headerlink" title="1.添加CNAME"></a>1.添加CNAME</h3><p>在你的<code>github_name.github.io</code>项目根目录下创建一个<code>CNAME</code>文件(无扩展名)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">//你要绑定的域名</span><br><span class="line">178dream.com</span><br></pre></td></tr></table></figure></p>
-<a id="more"></a>
-<h3 id="2-解析域名"><a href="#2-解析域名" class="headerlink" title="2.解析域名"></a>2.解析域名</h3><p>去你购买域名的服务商空间里找到域名解析的选项,修改如下:<br><img src="/downloads/Achange.png" alt="A记录修改"><br>解析成功后即可用绑定的自定义访问.</p>
-<hr>
-<h2 id="hexo部署"><a href="#hexo部署" class="headerlink" title="hexo部署"></a>hexo部署</h2><p>如果使用hexo部署博客的话,CNAME文件写在以下路径:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/source/CNAME</span><br></pre></td></tr></table></figure></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ hexo g // 在public根目录下生成CNAME文件</span><br><span class="line">$ hexo d // 自动部署到远程仓库根目录下</span><br></pre></td></tr></table></figure>]]></content>
-      
-        
-        <tags>
-            
-            <tag> github </tag>
-            
-            <tag> hexo </tag>
             
         </tags>
         
