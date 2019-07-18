@@ -1,0 +1,974 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Lostlover, 个人博客, 前端博客, hexo博客" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="Pipeable Operators从版本5.5开始，我们发布了”pipe operators”，可以直接在rxjs/operators访问操作符。 与rxjs/ add/operator/*中的操作符相比，这仅仅是一种更好的方法来引入所需的操作符。 注意：通过rxjs/operators引入的操作符，如果你的构建程序不更改配置的话，最后打包的文件会变大，不过没关系，Known Issues部分会">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【译】RxJS Pipeable Operators - Pipe">
+<meta property="og:url" content="https://lostlover.github.io/20180411/RxJS Pipeable Operators - Pipe.html">
+<meta property="og:site_name" content="sakulanbo">
+<meta property="og:description" content="Pipeable Operators从版本5.5开始，我们发布了”pipe operators”，可以直接在rxjs/operators访问操作符。 与rxjs/ add/operator/*中的操作符相比，这仅仅是一种更好的方法来引入所需的操作符。 注意：通过rxjs/operators引入的操作符，如果你的构建程序不更改配置的话，最后打包的文件会变大，不过没关系，Known Issues部分会">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-07-18T07:32:55.886Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【译】RxJS Pipeable Operators - Pipe">
+<meta name="twitter:description" content="Pipeable Operators从版本5.5开始，我们发布了”pipe operators”，可以直接在rxjs/operators访问操作符。 与rxjs/ add/operator/*中的操作符相比，这仅仅是一种更好的方法来引入所需的操作符。 注意：通过rxjs/operators引入的操作符，如果你的构建程序不更改配置的话，最后打包的文件会变大，不过没关系，Known Issues部分会">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> 【译】RxJS Pipeable Operators - Pipe | sakulanbo </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?c489ed88c51144863a600909600e12e6";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">sakulanbo</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="#" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup">
+ <span class="search-icon fa fa-search"></span>
+ <input type="text" id="local-search-input">
+ <div id="local-search-result"></div>
+ <span class="popup-btn-close">close</span>
+</div>
+
+
+    </div>
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                【译】RxJS Pipeable Operators - Pipe
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2018-04-11T00:00:00+08:00" content="2018-04-11">
+              2018-04-11
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/20180411/RxJS Pipeable Operators - Pipe.html#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="/20180411/RxJS Pipeable Operators - Pipe.html" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/20180411/RxJS Pipeable Operators - Pipe.html" class="leancloud_visitors" data-flag-title="【译】RxJS Pipeable Operators - Pipe">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Pipeable-Operators"><a href="#Pipeable-Operators" class="headerlink" title="Pipeable Operators"></a>Pipeable Operators</h1><p>从版本5.5开始，我们发布了”pipe operators”，可以直接在<code>rxjs/operators</code>访问操作符。 与<code>rxjs/ add/operator/*</code>中的操作符相比，这仅仅是一种更好的方法来引入所需的操作符。</p>
+<p><strong>注意</strong>：通过<code>rxjs/operators</code>引入的操作符，如果你的构建程序不更改配置的话，最后打包的文件会变大，不过没关系，<strong>Known Issues</strong>部分会给出解决办法。</p>
+<p><strong>改名的操作符</strong></p>
+<p>由于操作符可独立于Observable对象使用，操作符不能与JavaScript关键字冲突。 因此对某些操作符的可移植版本的名称进行更改。 有以下操作符：</p>
+<ol>
+<li><code>do</code> -&gt; <code>tap</code></li>
+<li><code>catch</code> -&gt; <code>catchError</code></li>
+<li><code>switch</code> -&gt; <code>switchAll</code></li>
+<li><code>finally</code> -&gt; <code>finalize</code></li>
+</ol>
+<a id="more"></a>
+<p><code>let</code>操作符现在是<code>Observable</code>的一部分，并且不能被导入。<br><code>source$.let(myOperator) -&gt; source$.pipe(myOperator)</code></p>
+<p>现在移除了<code>toPromise()</code>操作符，因为它返回的是<code>Observable</code>而并不是<code>Promise</code>。现在使用<code>Observable.toPromise()</code>实例方法。</p>
+<p>因为<code>throw</code>是关键字，用<code>_throw</code>来导入。<code>import { _throw } from &#39;rxjs/observable/throw&#39;</code></p>
+<p>如果<code>_</code>这个符号很困扰你，可以使用以下方法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">import &#123; ErrorObservable &#125; from &apos;rxjs/observable/ErrorObservable&apos;;</span><br><span class="line">...</span><br><span class="line">const e = ErrorObservable.create(new Error(&apos;My bad&apos;));</span><br><span class="line">const e2 = new ErrorObservable(new Error(&apos;My bad too&apos;));</span><br></pre></td></tr></table></figure></p>
+<h1 id="Why"><a href="#Why" class="headerlink" title="Why?"></a>Why?</h1><p><code>patched</code>操作符链式调用的问题：</p>
+<ol>
+<li><p>任何导入<code>patched</code>操作符的库都会为该库的所有使用者增加<code>Observable.prototype</code>，从而创建盲目的依赖关系。 如果删除这类库，这可能会不知不觉地影响其他人的引用。 使用<code>pipeables</code>，你必须将你需要的操作符导入到正在使用它们的每个文件中。</p>
+</li>
+<li><p>直接添加到原型上的操作符不会像<code>rollup</code>或<code>webpack</code>这样的工具“进行摇树优化”。 <code>pipeable</code>操作符将会像它们直接从模块中引入的功能一样。</p>
+</li>
+<li><p>无法通过任何构建工具或<code>lint rule</code>可靠地检测到正在应用中导入但并未使用的操作符。 这意味着你可能会导入<code>scan</code>，但不再使用它，它仍然被添加到你的输出包中。 对于<code>pipeable</code>操作符，如果你不使用它，<code>lint rule</code>可以为你检测出来。</p>
+</li>
+<li><p>这种设计很棒。 构建自己的自定义操作符变得非常容易，现在它们的工作方式与rxjs中的所有其他操作符一样。 你不需要扩展<code>Observable</code>或重写<code>lift</code>。</p>
+</li>
+</ol>
+<h1 id="What"><a href="#What" class="headerlink" title="What?"></a>What?</h1><p>什么是<code>pipeable</code>操作符？ 简而言之，可以与当前<code>let</code>运算符一起使用的函数。 它曾经是名称的起源（“lettable”），但是这让人觉得很奇怪，所以改为“pipeable”，因为它们打算与<code>pipe</code>功能一起使用。 一个<code>pipeable</code>操作符基本上是任何返回一个带有签名函数的函数：<code>&lt;T，R&gt;（source：Observable &lt;T&gt;）=&gt; Observable &lt;R&gt;</code>。</p>
+<p>现在在<code>Observable.prototype.pipe</code>中有一个’Observable<code>内置的</code>pipe`方法，它类似于以前的链式组合操作符。（如下所示）</p>
+<p>在<code>rxjs / util / pipe</code>上还有<code>pipe</code>实用功能，可用于从其他<code>pipeable</code>操作符构建可重复使用的<code>pipeable</code>操作符。</p>
+<h1 id="Usage"><a href="#Usage" class="headerlink" title="Usage"></a>Usage</h1><p>你可以在<code>rxjs / operators</code>（<strong>复数</strong>）下导入所需的操作符。 还推荐直接使用Observable创建方法，如下所示，使用`range’：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; range &#125; <span class="keyword">from</span> <span class="string">'rxjs/observable/range'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; map, filter, scan &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> source$ = range(<span class="number">0</span>, <span class="number">10</span>);</span><br><span class="line"></span><br><span class="line">source$.pipe(</span><br><span class="line">  filter(<span class="function"><span class="params">x</span> =&gt;</span> x % <span class="number">2</span> === <span class="number">0</span>),</span><br><span class="line">  map(<span class="function"><span class="params">x</span> =&gt;</span> x + x),</span><br><span class="line">  scan(<span class="function">(<span class="params">acc, x</span>) =&gt;</span> acc + x, <span class="number">0</span>)</span><br><span class="line">)</span><br><span class="line">.subscribe(<span class="function"><span class="params">x</span> =&gt;</span> <span class="built_in">console</span>.log(x))</span><br></pre></td></tr></table></figure>
+<h1 id="Build-Your-Own-Operators-Easily"><a href="#Build-Your-Own-Operators-Easily" class="headerlink" title="Build Your Own Operators Easily"></a>Build Your Own Operators Easily</h1><p>实际上，你可以用<code>let</code>来做到这一点……但是构建你自己的操作符就像现在写一个函数一样简单。 请注意，可以无缝地与其他rxjs操作符组成自定义操作符。</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; interval &#125; <span class="keyword">from</span> <span class="string">'rxjs/observable/interval'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; filter, map, take, toArray &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators'</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * an operator that takes every Nth value</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">const</span> takeEveryNth = <span class="function">(<span class="params">n: <span class="built_in">number</span></span>) =&gt;</span> &lt;T&gt;<span class="function">(<span class="params">source: Observable&lt;T&gt;</span>) =&gt;</span></span><br><span class="line">  <span class="keyword">new</span> Observable&lt;T&gt;(<span class="function"><span class="params">observer</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">return</span> source.subscribe(&#123;</span><br><span class="line">      next(x) &#123;</span><br><span class="line">        <span class="keyword">if</span> (count++ % n === <span class="number">0</span>) observer.next(x);</span><br><span class="line">      &#125;,</span><br><span class="line">      error(err) &#123; observer.error(err); &#125;,</span><br><span class="line">      complete() &#123; observer.complete(); &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * You can also use an existing operator like so</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">const</span> takeEveryNthSimple = <span class="function">(<span class="params">n: <span class="built_in">number</span></span>) =&gt;</span> &lt;T&gt;<span class="function">(<span class="params">source: Observable&lt;T&gt;</span>) =&gt;</span></span><br><span class="line">  source.pipe(filter(<span class="function">(<span class="params">value, index</span>) =&gt;</span> index % n === <span class="number">0</span> ))</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * And since pipeable operators return functions, you can further simplify like so</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">const</span> takeEveryNthSimplest = <span class="function">(<span class="params">n: <span class="built_in">number</span></span>) =&gt;</span> filter(<span class="function">(<span class="params">value, index</span>) =&gt;</span> index % n === <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">interval(<span class="number">1000</span>).pipe(</span><br><span class="line">  takeEveryNth(<span class="number">2</span>),</span><br><span class="line">  map(<span class="function"><span class="params">x</span> =&gt;</span> x + x),</span><br><span class="line">  takeEveryNthSimple(<span class="number">3</span>),</span><br><span class="line">  map(<span class="function"><span class="params">x</span> =&gt;</span> x * x),</span><br><span class="line">  takeEveryNthSimplest(<span class="number">4</span>),</span><br><span class="line">  take(<span class="number">3</span>),</span><br><span class="line">  toArray()</span><br><span class="line">)</span><br><span class="line">.subscribe(<span class="function"><span class="params">x</span> =&gt;</span> <span class="built_in">console</span>.log(x));</span><br><span class="line"><span class="comment">// [0, 2304, 9216]</span></span><br></pre></td></tr></table></figure>
+<h1 id="Known-Issues"><a href="#Known-Issues" class="headerlink" title="Known Issues"></a>Known Issues</h1><h2 id="TypeScript-lt-2-4"><a href="#TypeScript-lt-2-4" class="headerlink" title="TypeScript &lt; 2.4"></a>TypeScript &lt; 2.4</h2><p>在TypeScript 2.3及更低版本中，需要将类型添加到传递给操作符的函数中，因为类型不能在TypeScript 2.4之前推断出来。 在TypeScript 2.4中，类型将通过合成来正确推断。</p>
+<p><strong>TS 2.3及以下</strong></p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">range(<span class="number">0</span>, <span class="number">10</span>).pipe(</span><br><span class="line">  map(<span class="function">(<span class="params">n: <span class="built_in">number</span></span>) =&gt;</span> n + <span class="string">'!'</span>),</span><br><span class="line">  map(<span class="function">(<span class="params">s: <span class="built_in">string</span></span>) =&gt;</span> <span class="string">'Hello, '</span> + s),</span><br><span class="line">).subscribe(<span class="function"><span class="params">x</span> =&gt;</span> <span class="built_in">console</span>.log(x))</span><br></pre></td></tr></table></figure>
+<p><strong>TS 2.4及以上</strong></p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">range(<span class="number">0</span>, <span class="number">10</span>).pipe(</span><br><span class="line">  map(<span class="function"><span class="params">n</span> =&gt;</span> n + <span class="string">'!'</span>),</span><br><span class="line">  map(<span class="function"><span class="params">s</span> =&gt;</span> <span class="string">'Hello, '</span> + s),</span><br><span class="line">).subscribe(<span class="function"><span class="params">x</span> =&gt;</span> <span class="built_in">console</span>.log(x))</span><br></pre></td></tr></table></figure>
+<h2 id="Build-and-Treeshaking"><a href="#Build-and-Treeshaking" class="headerlink" title="Build and Treeshaking"></a>Build and Treeshaking</h2><p>从<code>main</code>（或重新导出）文件导入时，应用程序包有时可能会增长。 现在从<code>rxjs / operators</code>中导入可管理的操作符，但是如果不更改构建过程，通常会导致更大的应用程序包。 这是因为默认<code>rxjs / operators</code>会解析为rxjs的CommonJS输出。</p>
+<p>为了使用新的<code>pipeable</code>操作符而不增加打包的体积，需要更改Webpack配置。 这种方法只适用于Webpack 3+，因为它依赖于来自Webpack 3新的特性<code>ModuleConcatenationPlugin</code>。</p>
+<p><strong>path-mapping</strong></p>
+<p>与rxjs 5.5一起发布的版本是使用ES5和ES2015语言级别的ECMAScript模块格式（导入和导出）的rxjs版本。 你可以在<code>node_modules/rxjs/_esm5</code>和<code>node_modules/rxjs/_esm2015</code>（“esm”代表ECMAScript模块，数字“5”或“2015”代表ES语言级别）中找到这些分布。 在你的代码中，应该从<code>rxjs / operators</code>中导入，但在Webpack配置文件中，需要将导入重新映射到ESM5（或ESM2015）版本。</p>
+<p>如果你需要使用（’rxjs / _esm5 / path-mapping’）`，将收到一个函数，该函数返回一个键值对的对象，将每个输入映射到磁盘上的文件位置。 如下：</p>
+<p><strong>webpack.config.js</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> rxPaths = <span class="built_in">require</span>(<span class="string">'rxjs/_esm5/path-mapping'</span>);</span><br><span class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>);</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">'path'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  entry: <span class="string">'index.js'</span>,</span><br><span class="line">  output: <span class="string">'bundle.js'</span>,</span><br><span class="line">  resolve: &#123;</span><br><span class="line">    <span class="comment">// Use the "alias" key to resolve to an ESM distribution</span></span><br><span class="line">    alias: rxPaths()</span><br><span class="line">  &#125;,</span><br><span class="line">  plugins: [</span><br><span class="line">    <span class="keyword">new</span> webpack.optimize.ModuleConcatenationPlugin()</span><br><span class="line">  ]</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>or</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>);</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">'path'</span>);</span><br><span class="line"><span class="keyword">const</span> HtmlWebpackPlugin = <span class="built_in">require</span>(<span class="string">'html-webpack-plugin'</span>);</span><br><span class="line"><span class="keyword">const</span> DashboardPlugin = <span class="built_in">require</span>(<span class="string">'webpack-dashboard/plugin'</span>);</span><br><span class="line"><span class="keyword">const</span> nodeEnv = process.env.NODE_ENV || <span class="string">'development'</span>;</span><br><span class="line"><span class="keyword">const</span> isProd = nodeEnv === <span class="string">'production'</span>;</span><br><span class="line"><span class="keyword">const</span> rxPaths = <span class="built_in">require</span>(<span class="string">'rxjs/_esm5/path-mapping'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> config = &#123;</span><br><span class="line">    devtool: isProd ? <span class="string">'hidden-source-map'</span> : <span class="string">'cheap-eval-source-map'</span>,</span><br><span class="line">    context: path.resolve(<span class="string">'./src'</span>),</span><br><span class="line">    entry: &#123;</span><br><span class="line">        app: <span class="string">'./index.ts'</span>,</span><br><span class="line">        vendor: <span class="string">'./vendor.ts'</span></span><br><span class="line">    &#125;,</span><br><span class="line">    output: &#123;</span><br><span class="line">        path: path.resolve(<span class="string">'./dist'</span>),</span><br><span class="line">        filename: <span class="string">'[name].bundle.js'</span>,</span><br><span class="line">        sourceMapFilename: <span class="string">'[name].map'</span>,</span><br><span class="line">        devtoolModuleFilenameTemplate: <span class="function"><span class="keyword">function</span> (<span class="params">info</span>) </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">"file:///"</span> + info.absoluteResourcePath;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="built_in">module</span>: &#123;</span><br><span class="line">        rules: [</span><br><span class="line">            &#123; <span class="attr">enforce</span>: <span class="string">'pre'</span>, <span class="attr">test</span>: <span class="regexp">/\.ts$|\.tsx$/</span>, <span class="attr">exclude</span>: [<span class="string">"node_modules"</span>], <span class="attr">loader</span>: <span class="string">'ts-loader'</span> &#125;,</span><br><span class="line">            &#123; <span class="attr">test</span>: <span class="regexp">/\.html$/</span>, <span class="attr">loader</span>: <span class="string">"html"</span> &#125;,</span><br><span class="line">            &#123; <span class="attr">test</span>: <span class="regexp">/\.css$/</span>, <span class="attr">loaders</span>: [<span class="string">'style'</span>, <span class="string">'css'</span>] &#125;</span><br><span class="line">        ]</span><br><span class="line">    &#125;,</span><br><span class="line">    resolve: &#123;</span><br><span class="line">        extensions: [<span class="string">".ts"</span>, <span class="string">".js"</span>],</span><br><span class="line">        modules: [path.resolve(<span class="string">'./src'</span>), <span class="string">'node_modules'</span>],</span><br><span class="line">        alias: rxPaths()</span><br><span class="line">    &#125;,</span><br><span class="line">    plugins: [</span><br><span class="line">        <span class="keyword">new</span> webpack.DefinePlugin(&#123;</span><br><span class="line">            <span class="string">'process.env'</span>: &#123; <span class="comment">// eslint-disable-line quote-props</span></span><br><span class="line">                NODE_ENV: <span class="built_in">JSON</span>.stringify(nodeEnv)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;),</span><br><span class="line">        <span class="keyword">new</span> webpack.HashedModuleIdsPlugin(),</span><br><span class="line">        <span class="keyword">new</span> webpack.optimize.ModuleConcatenationPlugin(),</span><br><span class="line">        <span class="keyword">new</span> HtmlWebpackPlugin(&#123;</span><br><span class="line">            title: <span class="string">'Typescript Webpack Starter'</span>,</span><br><span class="line">            template: <span class="string">'!!ejs-loader!src/index.html'</span></span><br><span class="line">        &#125;),</span><br><span class="line">        <span class="keyword">new</span> webpack.optimize.CommonsChunkPlugin(&#123;</span><br><span class="line">            name: <span class="string">'vendor'</span>,</span><br><span class="line">            minChunks: <span class="literal">Infinity</span>,</span><br><span class="line">            filename: <span class="string">'vendor.bundle.js'</span></span><br><span class="line">        &#125;),</span><br><span class="line">        <span class="keyword">new</span> webpack.optimize.UglifyJsPlugin(&#123;</span><br><span class="line">            mangle: <span class="literal">false</span>,</span><br><span class="line">            compress: &#123; <span class="attr">warnings</span>: <span class="literal">false</span>, <span class="attr">pure_getters</span>: <span class="literal">true</span>, <span class="attr">passes</span>: <span class="number">3</span>, <span class="attr">screw_ie8</span>: <span class="literal">true</span>, <span class="attr">sequences</span>: <span class="literal">false</span> &#125;,</span><br><span class="line">            output: &#123; <span class="attr">comments</span>: <span class="literal">false</span>, <span class="attr">beautify</span>: <span class="literal">true</span> &#125;,</span><br><span class="line">            sourceMap: <span class="literal">false</span></span><br><span class="line">        &#125;),</span><br><span class="line">        <span class="keyword">new</span> DashboardPlugin(),</span><br><span class="line">        <span class="keyword">new</span> webpack.LoaderOptionsPlugin(&#123;</span><br><span class="line">            options: &#123;</span><br><span class="line">                tslint: &#123;</span><br><span class="line">                    emitErrors: <span class="literal">true</span>,</span><br><span class="line">                    failOnHint: <span class="literal">true</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">    ]</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = config;</span><br></pre></td></tr></table></figure>
+<p><strong>无法控制构建过程时</strong></p>
+<p>如果无法控制构建过程（或者无法升级到Webpack 3+），则上述解决方案将无法工作。 因此，从<code>rxjs / operators</code>导入可能会使你的应用程序包变大。 但是，仍然有一种方法可以使用<code>pipeable</code>操作符。 你必须使用深导入，这与你在5.5版之前导入的方式和<code>pipeable</code>操作符相似：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; map, filter, reduce &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators'</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 变为:</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> &#123; map &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators/map'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; filter &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators/filter'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; reduce &#125; <span class="keyword">from</span> <span class="string">'rxjs/operators/reduce'</span>;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+  <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+    <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+      <span>赏</span>
+    </button>
+    <div id="QR" style="display: none;">
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay-reward-image.JPG" alt="Lostlover Alipay"/>
+          <p>支付宝打赏</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/20161011/javascript-started.html" rel="next" title="Javascript总结">
+                <i class="fa fa-chevron-left"></i> Javascript总结
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="/20180411/RxJS Pipeable Operators - Pipe.html"
+     data-title="【译】RxJS Pipeable Operators - Pipe"
+     data-content=""
+     data-url="https://lostlover.github.io/20180411/RxJS Pipeable Operators - Pipe.html">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="/20180411/RxJS Pipeable Operators - Pipe.html"
+           data-title="【译】RxJS Pipeable Operators - Pipe" data-url="https://lostlover.github.io/20180411/RxJS Pipeable Operators - Pipe.html">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="Lostlover" />
+          <p class="site-author-name" itemprop="name">Lostlover</p>
+          <p class="site-description motion-element" itemprop="description">博客</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">11</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lostlover" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://www.malong.com/zh/home" target="_blank" title="malong">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  malong
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Pipeable-Operators"><span class="nav-number">1.</span> <span class="nav-text">Pipeable Operators</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Why"><span class="nav-number">2.</span> <span class="nav-text">Why?</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#What"><span class="nav-number">3.</span> <span class="nav-text">What?</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Usage"><span class="nav-number">4.</span> <span class="nav-text">Usage</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Build-Your-Own-Operators-Easily"><span class="nav-number">5.</span> <span class="nav-text">Build Your Own Operators Easily</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Known-Issues"><span class="nav-number">6.</span> <span class="nav-text">Known Issues</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#TypeScript-lt-2-4"><span class="nav-number">6.1.</span> <span class="nav-text">TypeScript &lt; 2.4</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Build-and-Treeshaking"><span class="nav-number">6.2.</span> <span class="nav-text">Build and Treeshaking</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2016 - 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lostlover</span>
+</div>
+
+<!--<div class="powered-by">-->
+  <!--由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动-->
+<!--</div>-->
+
+<!--<div class="theme-info">-->
+  <!--主题 - -->
+  <!--<a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">-->
+    <!--NexT.Pisces-->
+  <!--</a>-->
+<!--</div>-->
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/custom.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"lostloverblog"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+       search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+    'use strict';
+    $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+            // get the contents from search data
+            isfetched = true;
+            $('.popup').detach().appendTo('.header-inner');
+            var datas = $( "entry", xmlResponse ).map(function() {
+                return {
+                    title: $( "title", this ).text(),
+                    content: $("content",this).text(),
+                    url: $( "url" , this).text()
+                };
+            }).get();
+            var $input = document.getElementById(search_id);
+            var $resultContent = document.getElementById(content_id);
+            $input.addEventListener('input', function(){
+                var matchcounts = 0;
+                var str='<ul class=\"search-result-list\">';                
+                var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                $resultContent.innerHTML = "";
+                if (this.value.trim().length > 1) {
+                // perform local searching
+                datas.forEach(function(data) {
+                    var isMatch = true;
+                    var content_index = [];
+                    var data_title = data.title.trim().toLowerCase();
+                    var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                    var data_url = data.url;
+                    var index_title = -1;
+                    var index_content = -1;
+                    var first_occur = -1;
+                    // only match artiles with not empty titles and contents
+                    if(data_title != '' && data_content != '') {
+                        keywords.forEach(function(keyword, i) {
+                            index_title = data_title.indexOf(keyword);
+                            index_content = data_content.indexOf(keyword);
+                            if( index_title < 0 && index_content < 0 ){
+                                isMatch = false;
+                            } else {
+                                if (index_content < 0) {
+                                    index_content = 0;
+                                }
+                                if (i == 0) {
+                                    first_occur = index_content;
+                                }
+                            }
+                        });
+                    }
+                    // show search results
+                    if (isMatch) {
+                        matchcounts += 1;
+                        str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                        var content = data.content.trim().replace(/<[^>]+>/g,"");
+                        if (first_occur >= 0) {
+                            // cut out 100 characters
+                            var start = first_occur - 20;
+                            var end = first_occur + 80;
+                            if(start < 0){
+                                start = 0;
+                            }
+                            if(start == 0){
+                                end = 50;
+                            }
+                            if(end > content.length){
+                                end = content.length;
+                            }
+                            var match_content = content.substring(start, end);
+                            // highlight all keywords
+                            keywords.forEach(function(keyword){
+                                var regS = new RegExp(keyword, "gi");
+                                match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                            });
+                            
+                            str += "<p class=\"search-result\">" + match_content +"...</p>"
+                        }
+                        str += "</li>";
+                    }
+                })};
+                str += "</ul>";
+                if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+                if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+                $resultContent.innerHTML = str;
+            });
+            proceedsearch();
+        }
+    });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').mousedown(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+  
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("Q8q5ps7EVX8i9qpv1A3hkrBF-gzGzoHsz", "FVNIE2sjpEh5vC8gpHjRtOfo");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+</body>
+</html>
